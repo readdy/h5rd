@@ -1,0 +1,53 @@
+# ignore external libraries
+libraries/external
+
+# ignore notebook checkpoints
+/*/.ipynb_checkpoints
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Output directory and build dirs
+build
+bin/*
+
+# python build temporaries
+*.egg-info
+
+# python schmutz
+*__pycache__
+*.pyc
+
+# osx resources
+.DS_Store
+
+# intellij resources
+.idea
+
+cmake-build-*
