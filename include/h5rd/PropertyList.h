@@ -34,7 +34,6 @@
 
 #include <iostream>
 #include "Object.h"
-#include "blosc.h"
 
 namespace h5rd {
 
@@ -126,12 +125,6 @@ public:
     void set_chunk(const dimensions &chunk_dims) {
         H5Pset_chunk(id(), static_cast<int>(chunk_dims.size()), chunk_dims.data());
     }
-
-    void activate_blosc() {
-        unsigned int cd_values[7];
-        blosc_compression::activate(id(), cd_values);
-    }
-
 
 };
 

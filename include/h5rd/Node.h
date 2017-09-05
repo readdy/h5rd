@@ -69,13 +69,13 @@ public:
     void read(const std::string &dataSetName, std::vector<T> &array);
 
     template<typename T>
-    void read(const std::string &dataSetName, std::vector<T> &array, DataSetType memoryType, DataSetType fileType);
+    void read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType);
 
     template<typename T>
-    DataSet createDataSet(const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
+    std::unique_ptr<DataSet> createDataSet(const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
                           DataSetCompression compression = DataSetCompression::blosc);
 
-    DataSet createDataSet(const std::string &name, const dimensions &chunkSize,
+    std::unique_ptr<DataSet> createDataSet(const std::string &name, const dimensions &chunkSize,
                           const dimensions &maxDims, const DataSetType &memoryType,
                           const DataSetType &fileType, DataSetCompression compression = DataSetCompression::blosc);
 

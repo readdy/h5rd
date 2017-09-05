@@ -85,7 +85,7 @@ inline void h5rd::DataSetType::close() {
 }
 
 namespace h5rd {
-VLENDataSetType::VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.id()),
+inline VLENDataSetType::VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.id()),
                                                                          other.parentFile()) {}
 
 template<>

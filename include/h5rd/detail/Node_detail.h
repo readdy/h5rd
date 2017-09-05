@@ -146,25 +146,25 @@ inline void h5rd::Node<Container>::write(const std::string &dataSetName, const s
 
 namespace {
 template<typename T>
-void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const T* data) {}
+inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const T* data) {}
 template<>
-void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const short* data) {
+inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const short* data) {
     H5LTmake_dataset_short(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 template<>
-void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const int* data) {
+inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const int* data) {
     H5LTmake_dataset_int(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 template<>
-void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const long* data) {
+inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const long* data) {
     H5LTmake_dataset_long(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 template<>
-void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const float* data) {
+inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const float* data) {
     H5LTmake_dataset_float(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 template<>
-void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const double* data) {
+inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const double* data) {
     H5LTmake_dataset_double(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 }
@@ -179,7 +179,7 @@ inline void h5rd::Node<Container>::write(const std::string &dataSetName, const d
 
 template<typename Container>
 template<typename T>
-inline h5rd::DataSet h5rd::Node<Container>::createDataSet(
+inline std::unique_ptr<h5rd::DataSet> h5rd::Node<Container>::createDataSet(
         const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
         h5rd::DataSetCompression compression) {
     return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(me()->parentFile()),
@@ -187,7 +187,7 @@ inline h5rd::DataSet h5rd::Node<Container>::createDataSet(
 }
 
 template<typename Container>
-inline h5rd::DataSet
+inline std::unique_ptr<h5rd::DataSet>
 h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimensions &chunkSize,
                                      const h5rd::dimensions &maxDims, const h5rd::DataSetType &memoryType,
                                      const h5rd::DataSetType &fileType, h5rd::DataSetCompression compression) {
@@ -196,9 +196,6 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
         std::stringstream result;
         std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
         // todo log::trace("creating data set with maxDims={}", result.str());
-    }
-    if (compression == DataSetCompression::blosc) {
-        blosc_compression::initialize();
     }
     // validate and find extension dim
     {
@@ -219,7 +216,6 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
         DataSetCreatePropertyList propertyList (me()->parentFile());
         propertyList.set_layout_chunked();
         propertyList.set_chunk(chunkSize);
-        if (compression == DataSetCompression::blosc) propertyList.activate_blosc();
 
         auto _hid = H5Dcreate(me()->id(), name.c_str(), fileType.id(),
                               fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
@@ -229,22 +225,24 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
             handle = _hid;
         }
     }
-    DataSet ds(me()->parentFile(), memoryType, fileType);
-    ds._hid = handle;
-    ds.extensionDim() = extensionDim;
+    auto ds = std::make_unique<DataSet>(me()->parentFile(), memoryType, fileType);
+    ds->_hid = handle;
+    ds->extensionDim() = extensionDim;
     return ds;
 }
 
 template<typename Container>
 template<typename T>
 inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array) {
-    read(dataSetName, array, STDDataSetType<T>(me()->parentFile()), NativeDataSetType<T>(me()->parentFile()));
+    STDDataSetType<T> stdDST (me()->parentFile());
+    NativeDataSetType<T> nDST (me()->parentFile());
+    read(dataSetName, array, &stdDST, &nDST);
 }
 
 template<typename Container>
 template<typename T>
-inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array, DataSetType memoryType,
-                                        DataSetType fileType) {
+inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType,
+                                        DataSetType *fileType) {
     //blosc_compression::initialize();
 
     const auto n_array_dims = 1 + util::n_dims<T>::value;
@@ -268,7 +266,7 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     // todo log::trace("required length = {}", required_length);
     array.resize(required_length);
 
-    auto result = H5Dread(hid, memoryType.id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
+    auto result = H5Dread(hid, memoryType->id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
 
     if(result < 0) {
         // todo log::trace("Failed reading result!");

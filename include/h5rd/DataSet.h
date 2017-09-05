@@ -71,7 +71,7 @@ public:
 
 private:
     dimension _extensionDim;
-    DataSpace _memorySpace;
+    std::unique_ptr<DataSpace> _memorySpace {nullptr};
     DataSetType _memoryType;
     DataSetType _fileType;
 };

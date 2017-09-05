@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
 project(readdy_io)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
 option(READDY_IO_TEST "Build tests?" ON)
 
 set(READDY_IO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(READDY_IO_HEADERS
         include/h5rd/common.h
-        include/h5rd/blosc.h
         include/h5rd/Exception.h
         include/h5rd/Node.h
         include/h5rd/Object.h
