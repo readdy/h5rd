@@ -26,11 +26,12 @@ set(READDY_IO_HEADERS
         include/h5rd/detail/File_detail.h
         include/h5rd/detail/DataSpace_detail.h
         include/h5rd/detail/DataSetType_detail.h
+        include/h5rd/detail/String_utils.h
         )
 
 string(REPLACE "include/" "${CMAKE_CURRENT_SOURCE_DIR}/include/" READDY_IO_HEADERS "${READDY_IO_HEADERS}")
 
-find_package(HDF5 REQUIRED)
+find_package(HDF5 COMPONENTS HL REQUIRED)
 message(STATUS "HDF5_FOUND: ${HDF5_FOUND}, version ${HDF5_VERSION}")
 
 if (READDY_IO_TEST)

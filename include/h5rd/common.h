@@ -61,6 +61,30 @@ inline bool groupExists(hid_t hid, const std::string &name) {
 }
 
 template<typename T>
+struct n_dims { static constexpr std::size_t value = 0; };
+
+template<typename T>
+struct n_dims<std::vector<T>> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+
+template<typename T>
+struct n_dims<T*> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+
+template<typename T, std::size_t N>
+struct n_dims<T[N]> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+
+template<typename T>
+struct inner_type { using type = T; };
+
+template<typename T>
+struct inner_type<std::vector<T>> { using type = typename inner_type<T>::type; };
+
+template<typename T>
+struct inner_type<T*> { using type = typename inner_type<T>::type; };
+
+template<typename T, std::size_t N>
+struct inner_type<T[N]> { using type = typename inner_type<T>::type; };
+
+template<typename T>
 struct is_std_array : public std::false_type {};
 
 template<typename T, std::size_t N>

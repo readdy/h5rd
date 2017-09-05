@@ -107,7 +107,10 @@ private:
 
 class NativeCompoundType : public DataSetType {
 public:
-    explicit NativeCompoundType(handle_id tid, Object* parentFile);
+    explicit NativeCompoundType(handle_id tid, Object* parentFile, std::vector<DataSetType> &&insertTypes);
+
+private:
+    std::vector<DataSetType> insertedTypes;
 };
 
 class STDCompoundType : public DataSetType {

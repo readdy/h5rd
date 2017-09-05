@@ -215,7 +215,8 @@ inline STDArrayDataSetType<T, len>::STDArrayDataSetType(Object *parentFile)
     _hid = H5Tarray_create(stdType.id(), 1, dim);
 }
 
-inline NativeCompoundType::NativeCompoundType(handle_id tid, Object *parentFile) : DataSetType(tid, parentFile) {}
+inline NativeCompoundType::NativeCompoundType(handle_id tid, Object *parentFile, std::vector<DataSetType> &&insertTypes)
+        : DataSetType(tid, parentFile), insertedTypes(std::move(insertTypes)) {}
 
 inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size, Object *parentFile) {
     tid = H5Tcreate(H5T_COMPOUND, size);
@@ -223,7 +224,7 @@ inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size, Ob
 }
 
 inline NativeCompoundType NativeCompoundTypeBuilder::build() {
-    return std::move(NativeCompoundType(tid, _parentFile));
+    return std::move(NativeCompoundType(tid, _parentFile, std::move(insertedTypes)));
 }
 
 inline NativeCompoundTypeBuilder &NativeCompoundTypeBuilder::insert(const std::string &name,

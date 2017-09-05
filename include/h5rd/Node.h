@@ -58,9 +58,7 @@ public:
     group_info info() const;
 
     template<typename T>
-    void write(const std::string &dataSetName, const std::vector<T> &data) {
-        write(dataSetName, {data.size()}, data.data());
-    }
+    void write(const std::string &dataSetName, const std::vector<T> &data);
 
     void write(const std::string &dataSetName, const std::string &string);
 

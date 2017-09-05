@@ -43,6 +43,17 @@ TEST(TestH5ReaDDy, Sanity) {
         std::cout << "/ exists: " << f.exists("/") << std::endl;
         auto g = f.createGroup("/foo/bar");
         std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+
+        g.write("miau", "blubs");
+        std::vector<int> zahlen{1,2,3,4,5,6,7};
+        g.write("zahlen", zahlen);
+        std::vector<int> readZahlen;
+        g.read("zahlen", readZahlen);
+        for(auto x : readZahlen) {
+            std::cout << x;
+        }
+        std::cout << std::endl;
+
         f.close();
 
         File f2("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);

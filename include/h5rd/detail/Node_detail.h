@@ -32,10 +32,14 @@
 
 #pragma once
 
+#include <H5LTpublic.h>
+
 #include "../PropertyList.h"
 #include "../Node.h"
 #include "../Group.h"
 #include "../DataSet.h"
+#include "../common.h"
+#include "String_utils.h"
 
 template<typename Container>
 inline bool h5rd::Node<Container>::exists(const std::string &name) const {
@@ -119,11 +123,67 @@ inline h5rd::Group h5rd::Node<Container>::createGroup(const std::string &path) {
 }
 
 template<typename Container>
+inline void h5rd::Node<Container>::write(const std::string &dataSetName, const std::string &string) {
+    auto stdstr = STDDataSetType<std::string>(me()->parentFile());
+    auto nativestr = NativeDataSetType<std::string>(me()->parentFile());
+    H5Tset_cset(stdstr.id(), H5T_CSET_UTF8);
+    H5Tset_cset(nativestr.id(), H5T_CSET_UTF8);
+
+    if(H5LTmake_dataset_string(me()->id(), dataSetName.c_str(), string.c_str()) < 0) {
+        throw Exception("there was a problem with writing \""+string+"\" into a hdf5 file.");
+    }
+}
+
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::write(const std::string &dataSetName, const std::vector<T> &data) {
+    if(std::is_same<typename std::decay<T>::type, std::string>::value) {
+        util::writeVector(me()->id(), dataSetName, data);
+    } else {
+        write(dataSetName, {data.size()}, data.data());
+    }
+}
+
+namespace {
+template<typename T>
+void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const T* data) {}
+template<>
+void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const short* data) {
+    H5LTmake_dataset_short(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
+}
+template<>
+void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const int* data) {
+    H5LTmake_dataset_int(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
+}
+template<>
+void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const long* data) {
+    H5LTmake_dataset_long(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
+}
+template<>
+void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const float* data) {
+    H5LTmake_dataset_float(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
+}
+template<>
+void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const double* data) {
+    H5LTmake_dataset_double(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
+}
+}
+
+
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::write(const std::string &dataSetName, const dimensions &dims, const T *data) {
+    using TT = typename std::decay<T>;
+    help_write(me()->id(), dataSetName, dims, data);
+}
+
+template<typename Container>
 template<typename T>
 inline h5rd::DataSet h5rd::Node<Container>::createDataSet(
         const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
         h5rd::DataSetCompression compression) {
-    return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>(), compression);
+    return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(me()->parentFile()),
+                         NativeDataSetType<T>(me()->parentFile()), compression);
 }
 
 template<typename Container>
@@ -173,4 +233,55 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
     ds._hid = handle;
     ds.extensionDim() = extensionDim;
     return ds;
+}
+
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array) {
+    read(dataSetName, array, STDDataSetType<T>(me()->parentFile()), NativeDataSetType<T>(me()->parentFile()));
+}
+
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array, DataSetType memoryType,
+                                        DataSetType fileType) {
+    //blosc_compression::initialize();
+
+    const auto n_array_dims = 1 + util::n_dims<T>::value;
+    auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
+
+    DataSpace memorySpace (me()->parentFile(), H5Dget_space(hid));
+
+    const auto ndim = memorySpace.ndim();
+
+    //if(ndim != n_array_dims) {
+    //    log::error("wrong dimensionality: {} != {}", ndim, n_array_dims);
+    //    throw std::invalid_argument("wrong dimensionality when attempting to read a data set");
+    //}
+
+    const auto dims = memorySpace.dims();
+    std::size_t required_length = 1;
+    for(const auto dim : dims) {
+        // todo log::trace("dim len = {}", dim);
+        required_length *= dim;
+    }
+    // todo log::trace("required length = {}", required_length);
+    array.resize(required_length);
+
+    auto result = H5Dread(hid, memoryType.id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
+
+    if(result < 0) {
+        // todo log::trace("Failed reading result!");
+        throw Exception("Failed reading \""+ dataSetName +"\"!");
+    }
+
+    H5Dclose(hid);
+
+    //for(std::size_t d = 0; d < ndim-1; ++d) {
+    //    for(auto& sub_arr : array) {
+    //        sub_arr.resize(dims[1]);
+    //    }
+    //}
+
+    // todo reshape array to dims
 }
