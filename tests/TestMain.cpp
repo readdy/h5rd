@@ -45,11 +45,11 @@ TEST(TestH5ReaDDy, Sanity) {
         std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
 
         g.write("miau", "blubs");
-        std::vector<int> zahlen{1,2,3,4,5,6,7};
+        std::vector<int> zahlen{1, 2, 3, 4, 5, 6, 7};
         g.write("zahlen", zahlen);
         std::vector<int> readZahlen;
         g.read("zahlen", readZahlen);
-        for(auto x : readZahlen) {
+        for (auto x : readZahlen) {
             std::cout << x;
         }
         std::cout << std::endl;
@@ -69,14 +69,14 @@ struct Stuff {
     std::array<short, 3> xyz;
 };
 
-auto getCompoundTypes  = [](h5rd::Object *parentFile) {
+auto getCompoundTypes = [](h5rd::Object *parentFile) {
     using namespace h5rd;
     NativeCompoundType stuffType = NativeCompoundTypeBuilder(sizeof(Stuff), parentFile)
-    .insert<decltype(std::declval<Stuff>().a)>("a", offsetof(Stuff, a))
-    .insert<decltype(std::declval<Stuff>().x)>("x", offsetof(Stuff, x))
-    .insertStdArray<decltype(std::declval<Stuff>().xyz)>("xyz", offsetof(Stuff, xyz))
-    .build();
-    STDCompoundType stdStuffType (stuffType);
+            .insert<decltype(std::declval<Stuff>().a)>("a", offsetof(Stuff, a))
+            .insert<decltype(std::declval<Stuff>().x)>("x", offsetof(Stuff, x))
+            .insertStdArray<decltype(std::declval<Stuff>().xyz)>("xyz", offsetof(Stuff, xyz))
+            .build();
+    STDCompoundType stdStuffType(stuffType);
     return std::make_tuple(std::move(stuffType), std::move(stdStuffType));
 };
 
@@ -105,8 +105,9 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
         group.read("stuffs", stuffs, &std::get<0>(types), &std::get<1>(types));
 
         ASSERT_EQ(stuffs.size(), 3);
-        for(const auto& s : stuffs) {
-            std::cout << "stuff: a=" << s.a << ", x=" << s.x << ", xyz=" << s.xyz.at(0) << "," << s.xyz.at(1) << "," << s.xyz.at(2) << std::endl;
+        for (const auto &s : stuffs) {
+            std::cout << "stuff: a=" << s.a << ", x=" << s.x << ", xyz=" << s.xyz.at(0) << "," << s.xyz.at(1) << ","
+                      << s.xyz.at(2) << std::endl;
         }
     }
 
@@ -114,8 +115,8 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
 
 TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
     using namespace h5rd;
-    File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-    auto group = f.createGroup("/my/compound/group");
+    std::unique_ptr<File> f = std::make_unique<File>("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
+    auto group = f->createGroup("/my/compound/group");
 
     std::vector<Stuff> stuffs;
     {
@@ -127,31 +128,49 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
         stuffs.push_back(s3);
     }
 
-    auto types = getCompoundTypes(f.parentFile());
+    auto types = getCompoundTypes(f->parentFile());
+
 
     auto ds = group.createDataSet("stuffs", {3}, {UNLIMITED_DIMS}, std::get<0>(types), std::get<1>(types));
-    ds->append({stuffs.size()}, stuffs.data());
+    {
+        ds->append({stuffs.size()}, stuffs.data());
+        ds->append({stuffs.size()}, stuffs.data());
+        f->close();
+        ASSERT_TRUE(f->closed());
 
-    f.close();
-    ASSERT_TRUE(f.closed());
-
-    File f2("test.h5", File::Action::OPEN, File::Flag::READ_ONLY);
-    auto group2 = f2.subgroup("/my/compound/group");
-    auto types2 = getCompoundTypes(f2.parentFile());
-    std::vector<Stuff> stuffs2;
-    group2.read("stuffs", stuffs2, &std::get<0>(types2), &std::get<1>(types2));
-
-    ASSERT_EQ(stuffs2.size(), 3);
-
-    int i = 1;
-    for(const auto& s : stuffs2) {
-        ASSERT_EQ(s.a, i);
-        ASSERT_EQ(s.x, i);
-        ASSERT_EQ(s.xyz.at(0), i);
-        ASSERT_EQ(s.xyz.at(1), i);
-        ASSERT_EQ(s.xyz.at(2), i);
-        ++i;
+        f.reset();
     }
+
+    {
+        File f2("test.h5", File::Action::OPEN, File::Flag::READ_ONLY);
+        auto group2 = f2.subgroup("/my/compound/group");
+        auto types2 = getCompoundTypes(f2.parentFile());
+        std::vector<Stuff> stuffs2;
+        group2.read("stuffs", stuffs2, &std::get<0>(types2), &std::get<1>(types2));
+
+        ASSERT_EQ(stuffs2.size(), 6);
+
+        int i = 1;
+        for (const auto &s : stuffs2) {
+            ASSERT_EQ(s.a, 1 + ((i - 1) % 3));
+            ASSERT_EQ(s.x, 1 + ((i - 1) % 3));
+            ASSERT_EQ(s.xyz.at(0), 1 + ((i - 1) % 3));
+            ASSERT_EQ(s.xyz.at(1), 1 + ((i - 1) % 3));
+            ASSERT_EQ(s.xyz.at(2), 1 + ((i - 1) % 3));
+            ++i;
+        }
+    }
+
+    File f3("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
+    auto gtest123 = f3.createGroup("/test123");
+
+    gtest123.write("hier", "stehtwas");
+
+    auto types123 = getCompoundTypes(f3.parentFile());
+    auto ds213 = gtest123.createDataSet("stuffs", {3}, {UNLIMITED_DIMS}, std::get<0>(types123), std::get<1>(types123));
+    ds.reset();
+    ds213->append({stuffs.size()}, stuffs.data());
+
 
 }
 
