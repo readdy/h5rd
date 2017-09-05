@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <memory>
 #include "Object.h"
 #include "DataSpace.h"
 #include "DataSetType.h"
@@ -62,7 +63,7 @@ public:
 
     void flush();
 
-    DataSpace getFileSpace() const;
+    std::shared_ptr<DataSpace> getFileSpace() const;
 
     dimension &extensionDim();
 

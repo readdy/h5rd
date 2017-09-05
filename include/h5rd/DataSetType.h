@@ -39,6 +39,10 @@ class DataSetType : public Object {
 public:
     explicit DataSetType(handle_id hid, Object *parentFile);
 
+    DataSetType(const DataSetType &rhs);
+
+    DataSetType &operator=(const DataSetType &rhs);
+
     void close() override;
 
     ~DataSetType() override;
@@ -52,7 +56,7 @@ public:
 template<typename T>
 class NativeDataSetType : public DataSetType {
 public:
-    NativeDataSetType();
+    explicit NativeDataSetType(Object* parentFile);
 
     using type = T;
 };
@@ -62,7 +66,7 @@ class NativeArrayDataSetType : public DataSetType {
 public:
     using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
 
-    NativeArrayDataSetType();
+    explicit NativeArrayDataSetType(Object* parentFile);
 
     constexpr static unsigned int size = len;
 private:
@@ -74,7 +78,7 @@ class NativeStdArrayDataSetType : public DataSetType {
 public:
     using type = typename T::value_type;
 
-    NativeStdArrayDataSetType();
+    NativeStdArrayDataSetType(Object* parentFile);
 
     constexpr static std::size_t size = std::tuple_size<T>::value;
 private:
@@ -84,7 +88,7 @@ private:
 template<typename T>
 class STDDataSetType : public DataSetType {
 public:
-    STDDataSetType();
+    explicit STDDataSetType(Object* parentFile);
 
     using type = T;
 };
@@ -94,26 +98,28 @@ class STDArrayDataSetType : public DataSetType {
 public:
     using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
 
-    STDArrayDataSetType();
+    explicit STDArrayDataSetType(Object* parentFile);
 
     constexpr static unsigned int size = len;
 private:
     STDDataSetType<type> stdType;
 };
 
-class NativeCompoundTypeBuilder;
-
 class NativeCompoundType : public DataSetType {
-    friend class NativeCompoundTypeBuilder;
+public:
+    explicit NativeCompoundType(handle_id tid, Object* parentFile);
+};
 
-    explicit NativeCompoundType(handle_id tid);
+class STDCompoundType : public DataSetType {
+public:
+    explicit STDCompoundType(const NativeCompoundType &nativeType);
 };
 
 class NativeCompoundTypeBuilder {
 public:
-    explicit NativeCompoundTypeBuilder(std::size_t size);
+    explicit NativeCompoundTypeBuilder(std::size_t size, Object* parentFile);
 
-    NativeCompoundTypeBuilder &insert(const std::string &name, std::size_t offset, handle_id type);
+    NativeCompoundTypeBuilder &insert(const std::string &name, std::size_t offset, DataSetType &&type);
 
     template<typename T>
     NativeCompoundTypeBuilder &insert(const std::string &name, std::size_t offset);
@@ -130,11 +136,8 @@ public:
 
 private:
     handle_id tid;
-};
-
-class STDCompoundType : public DataSetType {
-public:
-    explicit STDCompoundType(const NativeCompoundType &nativeType);
+    Object *_parentFile;
+    std::vector<DataSetType> insertedTypes;
 };
 
 }

@@ -118,16 +118,19 @@ inline h5rd::Group h5rd::Node<Container>::createGroup(const std::string &path) {
     }
 }
 
+template<typename Container>
 template<typename T>
-inline h5rd::DataSet h5rd::Node::createDataSet(const std::string &name, const dimensions &chunkSize,
-                                               const dimensions &maxDims, h5rd::DataSetCompression compression) {
+inline h5rd::DataSet h5rd::Node<Container>::createDataSet(
+        const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
+        h5rd::DataSetCompression compression) {
     return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>(), compression);
 }
 
+template<typename Container>
 inline h5rd::DataSet
-h5rd::Node::createDataSet(const std::string &name, const h5rd::dimensions &chunkSize, const h5rd::dimensions &maxDims,
-                          const h5rd::DataSetType &memoryType, const h5rd::DataSetType &fileType,
-                          h5rd::DataSetCompression compression) {
+h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimensions &chunkSize,
+                                     const h5rd::dimensions &maxDims, const h5rd::DataSetType &memoryType,
+                                     const h5rd::DataSetType &fileType, h5rd::DataSetCompression compression) {
     dimension extensionDim;
     {
         std::stringstream result;

@@ -35,171 +35,239 @@
 #include <iostream>
 #include "../DataSetType.h"
 
-h5rd::DataSetType::DataSetType(handle_id hid, Object *parentFile) : Object(parentFile) {
+inline h5rd::DataSetType::DataSetType(handle_id hid, Object *parentFile) : Object(parentFile) {
     _hid = hid;
 }
 
-h5rd::DataSetType::~DataSetType() {
-    try {
-        close();
-    } catch(const Exception &e) {
-        std::cerr << "Unable to close hdf5 data type: " << e.what() << std::endl;
-    }
-}
-
-void h5rd::DataSetType::close() {
-    if(valid()) {
-        if(H5Tclose(id()) < 0) {
-            throw Exception("Error on closing HDF5 data type");
+inline h5rd::DataSetType::DataSetType(const DataSetType &rhs) : Object(rhs._parentFile) {
+    _hid = rhs._hid;
+    _closed = rhs._closed;
+    if(_parentFile && !_parentFile->closed() && valid()) {
+        if(H5Iinc_ref(_hid) < 0) {
+            throw Exception("Error on increase HDF5 reference counter for data type");
         }
     }
 }
 
-h5rd::VLENDataSetType::VLENDataSetType(const DataSetType &other)  : DataSetType(H5Tvlen_create(other.id()), other.parentFile()) {}
+inline h5rd::DataSetType &h5rd::DataSetType::operator=(const h5rd::DataSetType &rhs) {
+    if(this != &rhs) {
+        if(_hid != H5I_INVALID_HID) {
+            if(H5Idec_ref(_hid)<0) {
+                throw Exception("Error in decrease of HDF5 reference counter for data type, copy assign");
+            }
+        }
+        _hid = rhs._hid;
+        _closed = rhs._closed;
+        _parentFile = rhs._parentFile;
+        if(_parentFile && !_parentFile->closed() && valid()) {
+            if(H5Iinc_ref(_hid) < 0) {
+                throw Exception("Error in increase HDF5 reference counter for data type, copy assign");
+            }
+        }
+    }
+    return *this;
+}
+
+inline h5rd::DataSetType::~DataSetType() {
+    try {
+        close();
+    } catch (const Exception &e) {
+        std::cerr << "Unable to close hdf5 data type: " << e.what() << std::endl;
+    }
+}
+
+inline void h5rd::DataSetType::close() {
+    if (_parentFile && !_parentFile->closed() && valid()) {
+        if (H5Idec_ref(id()) < 0) {
+            throw Exception("Error on decrease HDF5 reference counter for data type");
+        }
+    }
+}
+
+namespace h5rd {
+VLENDataSetType::VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.id()),
+                                                                         other.parentFile()) {}
 
 template<>
-inline h5rd::STDDataSetType<unsigned char>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_I8LE)) { }
+inline STDDataSetType<unsigned char>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_I8LE),
+                                                                                       parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<short>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_I16LE)) { }
+inline
+STDDataSetType<short>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_I16LE), parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<unsigned short>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_U16LE)){ }
+inline STDDataSetType<unsigned short>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_U16LE),
+                                                                                        parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<int>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_I32LE)){ }
+inline
+STDDataSetType<int>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_I32LE), parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<unsigned int>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_U32LE)){ }
+inline STDDataSetType<unsigned int>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_U32LE),
+                                                                                      parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<long>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_I64LE)){ }
+inline
+STDDataSetType<long>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_I64LE), parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<unsigned long>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_U64LE)){ }
+inline STDDataSetType<unsigned long>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_U64LE),
+                                                                                       parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<long long>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_I64LE)){ }
+inline
+STDDataSetType<long long>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_I64LE), parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<unsigned long long>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_U64LE)){ }
+inline
+STDDataSetType<unsigned long long>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_STD_U64LE),
+                                                                                     parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<float>::STDDataSetType() : DataSetType(H5Tcopy(H5T_IEEE_F32LE)){ }
+inline
+STDDataSetType<float>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_IEEE_F32LE), parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<double>::STDDataSetType() : DataSetType(H5Tcopy(H5T_IEEE_F64LE)){  }
+inline
+STDDataSetType<double>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_IEEE_F64LE), parentFile) {}
 
 template<>
-inline h5rd::STDDataSetType<std::string>::STDDataSetType() : DataSetType(H5Tcopy(H5T_C_S1)) { }
+inline
+STDDataSetType<std::string>::STDDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_C_S1), parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<unsigned char>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_UCHAR)){  }
+inline
+NativeDataSetType<unsigned char>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_UCHAR),
+                                                                                      parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<short>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_SHORT)) { }
+inline NativeDataSetType<short>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_SHORT),
+                                                                                     parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<unsigned short>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_USHORT)){ }
+inline
+NativeDataSetType<unsigned short>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_USHORT),
+                                                                                       parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<int>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_INT)) {  }
+inline NativeDataSetType<int>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_INT),
+                                                                                   parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<unsigned int>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_UINT)) { }
+inline
+NativeDataSetType<unsigned int>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_UINT),
+                                                                                     parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<long>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_LONG)) { }
+inline NativeDataSetType<long>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_LONG),
+                                                                                    parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<unsigned long>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_ULONG)) { }
+inline
+NativeDataSetType<unsigned long>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_ULONG),
+                                                                                      parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<long long>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_LLONG)) { }
+inline
+NativeDataSetType<long long>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_LLONG),
+                                                                                  parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<unsigned long long>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_ULLONG)) { }
+inline NativeDataSetType<unsigned long long>::NativeDataSetType(Object *parentFile) : DataSetType(
+        H5Tcopy(H5T_NATIVE_ULLONG), parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<float>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_FLOAT)) { }
+inline NativeDataSetType<float>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_FLOAT),
+                                                                                     parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<double>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_DOUBLE)){ }
+inline NativeDataSetType<double>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_DOUBLE),
+                                                                                      parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<bool>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_NATIVE_HBOOL)){  }
+inline NativeDataSetType<bool>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_HBOOL),
+                                                                                    parentFile) {}
 
 template<>
-inline h5rd::NativeDataSetType<std::string>::NativeDataSetType() : DataSetType(H5Tcopy(H5T_C_S1)) { }
+inline NativeDataSetType<std::string>::NativeDataSetType(Object *parentFile) : DataSetType(H5Tcopy(H5T_C_S1),
+                                                                                           parentFile) {}
 
 template<typename T, typename enable>
-inline h5rd::NativeStdArrayDataSetType<T, enable>::NativeStdArrayDataSetType() : DataSetType(-1) {
-    nativeType = NativeDataSetType<type>{};
+inline NativeStdArrayDataSetType<T, enable>::NativeStdArrayDataSetType(Object *parentFile)
+        : DataSetType(-1, parentFile), nativeType(NativeDataSetType<type> {parentFile}) {
     hsize_t dim[1] = {size};
     _hid = H5Tarray_create(nativeType.id(), 1, dim);
 }
 
 template<typename T, unsigned int len>
-inline h5rd::NativeArrayDataSetType<T, len>::NativeArrayDataSetType() : DataSetType(-1) {
-    nativeType = NativeDataSetType<type>{};
+inline NativeArrayDataSetType<T, len>::NativeArrayDataSetType(Object *parentFile)
+        : DataSetType(-1, parentFile), nativeType(NativeDataSetType<type> {parentFile}) {
     hsize_t dim[1] = {len};
     _hid = H5Tarray_create(nativeType.id(), 1, dim);
 }
 
 template<typename T, unsigned int len>
-inline h5rd::STDArrayDataSetType<T, len>::STDArrayDataSetType() : DataSetType(-1) {
-    stdType = STDDataSetType<type>{};
+inline STDArrayDataSetType<T, len>::STDArrayDataSetType(Object *parentFile)
+        : DataSetType(-1, parentFile), stdType(STDDataSetType<type>(parentFile)) {
     hsize_t dim[1] = {len};
     _hid = H5Tarray_create(stdType.id(), 1, dim);
 }
 
-inline h5rd::NativeCompoundType::NativeCompoundType(handle_id tid) : DataSetType(tid){}
+inline NativeCompoundType::NativeCompoundType(handle_id tid, Object *parentFile) : DataSetType(tid, parentFile) {}
 
-inline h5rd::NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size) {
+inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size, Object *parentFile) {
     tid = H5Tcreate(H5T_COMPOUND, size);
+    _parentFile = parentFile;
 }
 
-inline h5rd::NativeCompoundType h5rd::NativeCompoundTypeBuilder::build() {
-    return NativeCompoundType(tid);
+inline NativeCompoundType NativeCompoundTypeBuilder::build() {
+    return std::move(NativeCompoundType(tid, _parentFile));
 }
 
-inline h5rd::NativeCompoundTypeBuilder& h5rd::NativeCompoundTypeBuilder::insert(const std::string &name,
-                                                                                std::size_t offset, handle_id type) {
-    if (H5Tinsert(tid, name.c_str(), offset, type) < 0) {
-        throw Exception("error on inserting field " + name + " at offset " + std::to_string(offset) + " into compound type " +
-                        std::to_string(tid) + "!");
+inline NativeCompoundTypeBuilder &NativeCompoundTypeBuilder::insert(const std::string &name,
+                                                                    std::size_t offset,
+                                                                    DataSetType &&type) {
+    insertedTypes.push_back(std::move(type));
+    if (H5Tinsert(tid, name.c_str(), offset, insertedTypes.back().id()) < 0) {
+        throw Exception(
+                "error on inserting field " + name + " at offset " + std::to_string(offset) + " into compound type " +
+                std::to_string(tid) + "!");
     }
     return *this;
 }
 
 template<typename T>
-inline h5rd::NativeCompoundTypeBuilder& h5rd::NativeCompoundTypeBuilder::insert(const std::string& name, std::size_t offset) {
-    NativeDataSetType<typename std::decay<T>::type> type;
-    return insert(name, offset, type.id());
+inline NativeCompoundTypeBuilder &
+NativeCompoundTypeBuilder::insert(const std::string &name, std::size_t offset) {
+    return insert(name, offset, NativeDataSetType<typename std::decay<T>::type>(_parentFile));
 }
 
 template<typename T, typename enable>
-inline h5rd::NativeCompoundTypeBuilder& h5rd::NativeCompoundTypeBuilder::insertStdArray(const std::string &name,
+inline NativeCompoundTypeBuilder &NativeCompoundTypeBuilder::insertStdArray(const std::string &name,
                                                                             std::size_t offset) {
-    NativeStdArrayDataSetType<T> type;
-    return insert(name, offset, type.id());
+    return insert(name, offset, NativeStdArrayDataSetType<T>(_parentFile));
 }
 
 template<typename T, unsigned int size>
-inline h5rd::NativeCompoundTypeBuilder& h5rd::NativeCompoundTypeBuilder::insertArray(const std::string &name, std::size_t offset) {
-    NativeArrayDataSetType<T, size> type;
-    return insert(name, offset, type.id());
+inline NativeCompoundTypeBuilder &
+NativeCompoundTypeBuilder::insertArray(const std::string &name, std::size_t offset) {
+    return insert(name, offset, NativeArrayDataSetType<T, size>(_parentFile));
 }
 
-inline h5rd::NativeCompoundTypeBuilder &h5rd::NativeCompoundTypeBuilder::insertString(const std::string &name, std::size_t offset) {
-    NativeDataSetType<std::string> t;
+inline NativeCompoundTypeBuilder &
+NativeCompoundTypeBuilder::insertString(const std::string &name, std::size_t offset) {
+    NativeDataSetType<std::string> t(_parentFile);
     H5Tset_cset(t.id(), H5T_CSET_UTF8);
     H5Tset_size(t.id(), H5T_VARIABLE);
-    return insert(name, offset, t.id());
+    return insert(name, offset, std::move(t));
 }
 
-inline h5rd::STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) : DataSetType(-1){
+inline STDCompoundType::STDCompoundType(const NativeCompoundType &nativeType) : DataSetType(-1,
+                                                                                            nativeType.parentFile()) {
     auto copy = H5Tcopy(nativeType.id());
     H5Tpack(copy);
     _hid = copy;
+}
 }
