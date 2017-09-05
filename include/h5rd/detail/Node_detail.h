@@ -32,9 +32,10 @@
 
 #pragma once
 
-#include <h5rd/PropertyList.h>
+#include "../PropertyList.h"
 #include "../Node.h"
 #include "../Group.h"
+#include "../DataSet.h"
 
 template<typename Container>
 inline bool h5rd::Node<Container>::exists(const std::string &name) const {
@@ -115,4 +116,58 @@ inline h5rd::Group h5rd::Node<Container>::createGroup(const std::string &path) {
         }
         return group;
     }
+}
+
+template<typename T>
+inline h5rd::DataSet h5rd::Node::createDataSet(const std::string &name, const dimensions &chunkSize,
+                                               const dimensions &maxDims, h5rd::DataSetCompression compression) {
+    return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(), NativeDataSetType<T>(), compression);
+}
+
+inline h5rd::DataSet
+h5rd::Node::createDataSet(const std::string &name, const h5rd::dimensions &chunkSize, const h5rd::dimensions &maxDims,
+                          const h5rd::DataSetType &memoryType, const h5rd::DataSetType &fileType,
+                          h5rd::DataSetCompression compression) {
+    dimension extensionDim;
+    {
+        std::stringstream result;
+        std::copy(maxDims.begin(), maxDims.end(), std::ostream_iterator<int>(result, ", "));
+        // todo log::trace("creating data set with maxDims={}", result.str());
+    }
+    if (compression == DataSetCompression::blosc) {
+        blosc_compression::initialize();
+    }
+    // validate and find extension dim
+    {
+        auto unlimited_it = std::find(maxDims.begin(), maxDims.end(), UNLIMITED_DIMS);
+        bool containsUnlimited = unlimited_it != maxDims.end();
+        if (!containsUnlimited) {
+            throw std::runtime_error("needs to contain unlimited_dims in some dimension to be extensible");
+        }
+        extensionDim = static_cast<dimension>(std::distance(maxDims.begin(), unlimited_it));
+        // todo log::trace("found extension dim {}", extensionDim);
+    }
+    handle_id handle;
+    {
+        // set up empty data set
+        dimensions dims(maxDims.begin(), maxDims.end());
+        dims[extensionDim] = 0;
+        DataSpace fileSpace(me()->parentFile(), dims, maxDims);
+        DataSetCreatePropertyList propertyList (me()->parentFile());
+        propertyList.set_layout_chunked();
+        propertyList.set_chunk(chunkSize);
+        if (compression == DataSetCompression::blosc) propertyList.activate_blosc();
+
+        auto _hid = H5Dcreate(me()->id(), name.c_str(), fileType.id(),
+                              fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
+        if (_hid < 0) {
+            throw Exception("Error on creating data set " + std::to_string(_hid));
+        } else {
+            handle = _hid;
+        }
+    }
+    DataSet ds(me()->parentFile(), memoryType, fileType);
+    ds._hid = handle;
+    ds.extensionDim() = extensionDim;
+    return ds;
 }

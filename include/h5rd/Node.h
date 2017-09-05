@@ -33,10 +33,14 @@
 #pragma once
 
 #include "Exception.h"
+#include "DataSetCompression.h"
 
 namespace h5rd {
 
 class Group;
+class DataSet;
+template<typename T> class STDDataSetType;
+template<typename T> class NativeDataSetType;
 
 template<typename Container>
 class Node {
@@ -52,6 +56,31 @@ public:
     bool exists(const std::string& name) const;
 
     group_info info() const;
+
+    template<typename T>
+    void write(const std::string &dataSetName, const std::vector<T> &data) {
+        write(dataSetName, {data.size()}, data.data());
+    }
+
+    void write(const std::string &dataSetName, const std::string &string);
+
+    template<typename T>
+    void write(const std::string &dataSetName, const dimensions &dims, const T *data);
+
+    template<typename T>
+    void read(const std::string &dataSetName, std::vector<T> &array);
+
+    template<typename T>
+    void read(const std::string &dataSetName, std::vector<T> &array, DataSetType memoryType, DataSetType fileType);
+
+    template<typename T>
+    DataSet createDataSet(const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
+                          DataSetCompression compression = DataSetCompression::blosc);
+
+    DataSet createDataSet(const std::string &name, const dimensions &chunkSize,
+                          const dimensions &maxDims, const DataSetType &memoryType,
+                          const DataSetType &fileType, DataSetCompression compression = DataSetCompression::blosc);
+
 
 private:
 

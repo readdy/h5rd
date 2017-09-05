@@ -37,7 +37,7 @@
 namespace h5rd {
 class DataSetType : public Object {
 public:
-    explicit DataSetType(handle_id hid);
+    explicit DataSetType(handle_id hid, Object *parentFile);
 
     void close() override;
 

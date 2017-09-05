@@ -15,6 +15,7 @@ set(READDY_IO_HEADERS
         include/h5rd/Group.h
         include/h5rd/DataSet.h
         include/h5rd/DataSetType.h
+        include/h5rd/DataSetCompression.h
         include/h5rd/PropertyList.h
         include/h5rd/DataSpace.h
         include/h5rd/File.h

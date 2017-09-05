@@ -33,7 +33,11 @@
 #pragma once
 
 #include <iostream>
+#include <iterator>
+
 #include "../DataSet.h"
+#include "../DataSpace.h"
+#include "../DataSetType.h"
 
 inline h5rd::DataSet::~DataSet() {
     try {
@@ -51,3 +55,78 @@ inline void h5rd::DataSet::close() {
 
 inline h5rd::DataSet::DataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType)
         : Object(parentFile), _memoryType(memoryType), _fileType(fileType)  {}
+
+inline h5rd::dimension &h5rd::DataSet::extensionDim() {
+    return _extensionDim;
+}
+
+inline const h5rd::dimension &h5rd::DataSet::extensionDim() const {
+    return _extensionDim;
+}
+
+inline h5rd::DataSpace h5rd::DataSet::getFileSpace() const {
+    auto _hid = H5Dget_space(id());
+    if (_hid < 0) {
+        throw Exception("Failed to get file space for data set!");
+    }
+    return DataSpace(_parentFile, _hid);
+}
+
+void h5rd::DataSet::flush() {
+    if (valid() && H5Fflush(id(), H5F_SCOPE_LOCAL) < 0) {
+        throw Exception("error when flushing HDF5 data set with handle " + std::to_string(id()));
+    }
+}
+
+template<typename T>
+inline void h5rd::DataSet::append(std::vector<T> &data) {
+    if (!data.empty()) append({1, data.size()}, data.data());
+}
+
+template<typename T>
+inline void h5rd::DataSet::append(const h5rd::dimensions &dims, const T *data) {
+    {
+        std::stringstream result;
+        std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
+        // todo log::trace("appending to regular data set with data size = ({})", result.str());
+    }
+    if (dims.size() != getFileSpace().ndim()) {
+        // todo log::error("Tried to append data with ndims={} to set with ndims={}", dims.size(), getFileSpace().ndim());
+        throw std::invalid_argument("tried to append data with wrong dimensionality!");
+    }
+    if (!_memorySpace.valid()) {
+        _memorySpace = DataSpace(_parentFile, dims);
+    } else {
+        H5Sset_extent_simple(_memorySpace.id(), static_cast<int>(dims.size()), dims.data(), nullptr);
+    }
+    dimensions currentExtent;
+    dimensions offset;
+    offset.resize(dims.size());
+    {
+        currentExtent = getFileSpace().dims();
+    }
+    offset[_extensionDim] = currentExtent[_extensionDim];
+    {
+        dimensions newExtent(currentExtent);
+        newExtent[_extensionDim] += dims[_extensionDim];
+        H5Dset_extent(id(), newExtent.data());
+    }
+    // todo log::trace("selecting hyperslab with:");
+    {
+        std::stringstream result;
+        std::copy(offset.begin(), offset.end(), std::ostream_iterator<int>(result, ", "));
+        // todo log::trace("    current extent = {}", result.str());
+    }
+    {
+        std::stringstream result;
+        std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));
+        // todo log::trace("    size = {}", result.str());
+    }
+    auto fileSpace = getFileSpace();
+    H5Sselect_hyperslab(fileSpace.id(), H5S_SELECT_SET, offset.data(), nullptr, dims.data(), nullptr);
+    if (H5Dwrite(id(), _memoryType.id(), _memorySpace.id(), fileSpace.id(), H5P_DEFAULT, data) < 0) {
+        //log::error("Error with data set {}", hid());
+        //H5Eprint(H5Eget_current_stack(), stderr);
+        throw Exception("Error on writing data set " + std::to_string(id()));
+    }
+}

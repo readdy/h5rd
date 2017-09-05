@@ -41,6 +41,8 @@ public:
 
     DataSpace();
 
+    DataSpace(Object *parentFile, handle_id handle);
+
     DataSpace(Object *parentFile, const dimensions &dims, const dimensions &maxDims = {});
 
     ~DataSpace() override;

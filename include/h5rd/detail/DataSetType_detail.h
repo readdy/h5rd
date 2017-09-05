@@ -35,7 +35,7 @@
 #include <iostream>
 #include "../DataSetType.h"
 
-h5rd::DataSetType::DataSetType(handle_id hid) {
+h5rd::DataSetType::DataSetType(handle_id hid, Object *parentFile) : Object(parentFile) {
     _hid = hid;
 }
 
@@ -55,7 +55,7 @@ void h5rd::DataSetType::close() {
     }
 }
 
-h5rd::VLENDataSetType::VLENDataSetType(const DataSetType &other)  : DataSetType(H5Tvlen_create(other.id())) {}
+h5rd::VLENDataSetType::VLENDataSetType(const DataSetType &other)  : DataSetType(H5Tvlen_create(other.id()), other.parentFile()) {}
 
 template<>
 inline h5rd::STDDataSetType<unsigned char>::STDDataSetType() : DataSetType(H5Tcopy(H5T_STD_I8LE)) { }

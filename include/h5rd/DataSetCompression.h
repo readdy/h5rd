@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file DataSet.h
+ * @file DataSetCompression.h
  * @brief << brief description >>
  * @author clonker
  * @date 05.09.17
@@ -32,49 +32,8 @@
 
 #pragma once
 
-#include "Object.h"
-#include "DataSpace.h"
-#include "DataSetType.h"
-
 namespace h5rd {
-
-class DataSet : public Object {
-public:
-    explicit DataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType);
-
-    DataSet(const DataSet &) = delete;
-
-    DataSet &operator=(const DataSet &) = delete;
-
-    DataSet(DataSet &&) noexcept = default;
-
-    DataSet &operator=(DataSet &&) noexcept = default;
-
-    template<typename T>
-    void append(std::vector<T> &data);
-
-    template<typename T>
-    void append(const dimensions &dims, const T* data);
-
-    ~DataSet() override;
-
-    void close() override;
-
-    void flush();
-
-    DataSpace getFileSpace() const;
-
-    dimension &extensionDim();
-
-    const dimension &extensionDim() const;
-
-private:
-    dimension _extensionDim;
-    DataSpace _memorySpace;
-    DataSetType _memoryType;
-    DataSetType _fileType;
+enum DataSetCompression {
+    none = 0x0000, blosc = 0x0001
 };
-
 }
-
-#include "detail/DataSet_detail.h"

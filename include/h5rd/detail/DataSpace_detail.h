@@ -95,3 +95,8 @@ inline h5rd::DataSpace::DataSpace(Object *parentFile, const dimensions &dims, co
 }
 
 inline h5rd::DataSpace::DataSpace() : Object(nullptr) {}
+
+inline h5rd::DataSpace::DataSpace(h5rd::Object *parentFile, h5rd::handle_id handle)
+        : Object(parentFile){
+    _hid = handle;
+}
