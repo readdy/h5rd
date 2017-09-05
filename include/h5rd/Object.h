@@ -37,12 +37,16 @@
 
 namespace h5rd {
 
-template<typename Container> class Node;
+template<typename Container>
+class Node;
+
+class DataSpace;
+class DataSetType;
 
 class Object {
 public:
 
-    explicit Object(Object* parentFile) : _parentFile(parentFile) {}
+    explicit Object(Object *parentFile) : _parentFile(parentFile) {}
 
     bool valid() const {
         return _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
@@ -52,22 +56,38 @@ public:
         return _hid;
     }
 
+    Object(const Object &) = delete;
+
+    Object &operator=(const Object &) = delete;
+
+    Object(Object &&rhs) noexcept
+            : _hid(std::move(rhs._hid)), _parentFile(std::move(rhs._parentFile)), _closed(std::move(rhs._closed)) {
+        rhs._closed = true;
+    }
+
+    Object &operator=(Object &&rhs) noexcept {
+        _hid = std::move(rhs._hid);
+        _parentFile = std::move(rhs._parentFile);
+        _closed = std::move(rhs._closed);
+        rhs._closed = true;
+        return *this;
+    }
+
     virtual ~Object() = default;
 
     virtual void close() = 0;
 
     bool closed() const;
 
-    Object* parentFile() const;
+    Object *parentFile() const;
 
 protected:
-    handle_id _hid {H5I_INVALID_HID};
-    Object* _parentFile {nullptr};
-    bool _closed {false};
+    handle_id _hid{H5I_INVALID_HID};
+    Object *_parentFile{nullptr};
+    bool _closed{false};
 
 private:
-    template<typename Container>
-    friend class Node;
+    template<typename Container> friend class Node;
 };
 
 }

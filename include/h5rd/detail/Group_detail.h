@@ -34,18 +34,18 @@
 
 #include "../Group.h"
 
-inline h5rd::Group::Group(std::string path, Object* parentFile) : Object(parentFile), path(std::move(path)){}
+inline h5rd::Group::Group(std::string path, Object *parentFile) : Object(parentFile), path(std::move(path)) {}
 
 inline h5rd::Group::~Group() {
     try {
         close();
-    } catch(const Exception &e) {
+    } catch (const Exception &e) {
         std::cerr << "Unable to close hdf5 group: " << e.what() << std::endl;
     }
 }
 
-void h5rd::Group::close() {
-    if(!_parentFile->closed() && valid() && H5Gclose(id()) < 0) {
+inline void h5rd::Group::close() {
+    if (!_parentFile->closed() && valid() && H5Gclose(id()) < 0) {
         throw Exception("Error on closing HDF5 group");
     }
 }

@@ -32,3 +32,22 @@
 
 #pragma once
 
+#include <iostream>
+#include "../DataSet.h"
+
+inline h5rd::DataSet::~DataSet() {
+    try {
+        close();
+    } catch(const Exception &e) {
+        std::cerr << "Unable to close hdf5 data set: " << e.what() << std::endl;
+    }
+}
+
+inline void h5rd::DataSet::close() {
+    if(!_parentFile->closed() && valid() && H5Dclose(id()) < 0) {
+        throw Exception("Error on closing HDF5 data set");
+    }
+}
+
+inline h5rd::DataSet::DataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType)
+        : Object(parentFile), _memoryType(memoryType), _fileType(fileType)  {}

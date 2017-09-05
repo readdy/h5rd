@@ -48,9 +48,8 @@ inline h5rd::Group h5rd::Node<Container>::subgroup(const std::string &name) {
     if(gid < 0) {
         throw Exception("Could not open subgroup " + name + "!");
     }
-    Group group(name);
+    Group group(name, me()->parentFile());
     group._hid = gid;
-    group._parentFile = me()->parentFile();
     return group;
 }
 

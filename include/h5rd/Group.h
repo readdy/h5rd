@@ -39,7 +39,15 @@ namespace h5rd {
 
 class Group : public Object, public Node<Group> {
 public:
-    explicit Group(std::string path, Object* parentFile);
+    explicit Group(std::string path, Object *parentFile);
+
+    Group(const Group &) = delete;
+
+    Group &operator=(const Group &) = delete;
+
+    Group(Group &&) = default;
+
+    Group &operator=(Group &&) = default;
 
     ~Group() override;
 

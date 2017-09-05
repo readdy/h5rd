@@ -38,8 +38,27 @@ namespace h5rd {
 
 class DataSet : public Object {
 public:
-    explicit DataSet(Object *parentFile) : Object(parentFile) {}
+    explicit DataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType);
 
+    DataSet(const DataSet &) = delete;
+
+    DataSet &operator=(const DataSet &) = delete;
+
+    DataSet(DataSet &&) noexcept = default;
+
+    DataSet &operator=(DataSet &&) noexcept = default;
+
+    ~DataSet() override;
+
+    void close() override;
+
+private:
+    dimension _extensionDim;
+    DataSpace _memorySpace;
+    DataSetType _memoryType;
+    DataSetType _fileType;
 };
 
 }
+
+#include "detail/DataSet_detail.h"

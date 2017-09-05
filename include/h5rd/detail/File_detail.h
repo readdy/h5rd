@@ -96,7 +96,7 @@ inline h5rd::File::~File() {
     }
 }
 
-void h5rd::File::close() {
+inline void h5rd::File::close() {
     if(!closed() && valid()) {
         if(H5Fclose(id()) < 0) {
             throw Exception("Error on closing HDF5 file \"" + path + "\"");

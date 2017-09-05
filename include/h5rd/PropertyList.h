@@ -41,24 +41,32 @@ namespace h5rd {
 class PropertyList : public Object {
     using super = Object;
 public:
-    explicit PropertyList(handle_id cls_id, Object* parentFile) : super(parentFile) {
+    explicit PropertyList(handle_id cls_id, Object *parentFile) : super(parentFile) {
         _hid = H5Pcreate(cls_id);
-        if(!valid()) {
+        if (!valid()) {
             throw Exception("Failed to create property list!");
         }
     }
 
+    PropertyList(const PropertyList &) = delete;
+
+    PropertyList(PropertyList &&) = delete;
+
+    PropertyList &operator=(const PropertyList &) = delete;
+
+    PropertyList &operator=(PropertyList &&) = delete;
+
     ~PropertyList() override {
         try {
             close();
-        } catch(const Exception &e) {
+        } catch (const Exception &e) {
             std::cerr << "Unable to close hdf5 property list: " << e.what() << std::endl;
         }
     }
 
     void close() override {
-        if(valid()) {
-            if(H5Pclose(id()) < 0) {
+        if (valid()) {
+            if (H5Pclose(id()) < 0) {
                 throw Exception("Error on closing HDF5 property list");
             }
         }
@@ -67,7 +75,7 @@ public:
 
 class LinkCreatePropertyList : public PropertyList {
 public:
-    explicit LinkCreatePropertyList(Object* parentFile) : PropertyList(H5P_LINK_CREATE, parentFile) {}
+    explicit LinkCreatePropertyList(Object *parentFile) : PropertyList(H5P_LINK_CREATE, parentFile) {}
 
     void set_create_intermediate_group() {
         H5Pset_create_intermediate_group(id(), 1);
@@ -76,7 +84,7 @@ public:
 
 class FileAccessPropertyList : public PropertyList {
 public:
-    explicit FileAccessPropertyList(Object* parentFile) : PropertyList(H5P_FILE_ACCESS, parentFile) {}
+    explicit FileAccessPropertyList(Object *parentFile) : PropertyList(H5P_FILE_ACCESS, parentFile) {}
 
     void set_close_degree_weak() {
         H5Pset_fclose_degree(id(), H5F_CLOSE_WEAK);
@@ -101,7 +109,7 @@ public:
 
 class DataSetCreatePropertyList : public PropertyList {
 public:
-    explicit DataSetCreatePropertyList(Object* parentFile) : PropertyList(H5P_DATASET_CREATE, parentFile) {}
+    explicit DataSetCreatePropertyList(Object *parentFile) : PropertyList(H5P_DATASET_CREATE, parentFile) {}
 
     void set_layout_compact() {
         H5Pset_layout(id(), H5D_COMPACT);

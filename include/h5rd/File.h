@@ -54,6 +54,14 @@ public:
 
     File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
 
+    File(const File &) = delete;
+
+    File &operator=(const File &) = delete;
+
+    File(File &&) = default;
+
+    File &operator=(File &&) = default;
+
     ~File() override;
 
     void flush();

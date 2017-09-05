@@ -35,7 +35,7 @@
 #include "../DataSpace.h"
 #include <iostream>
 
-std::size_t h5rd::DataSpace::ndim() const {
+inline std::size_t h5rd::DataSpace::ndim() const {
     const auto n = H5Sget_simple_extent_ndims(id());
     if (n < 0) {
         throw Exception("Failed to retrieve ndims for data space");
@@ -43,7 +43,10 @@ std::size_t h5rd::DataSpace::ndim() const {
     return static_cast<std::size_t>(n);
 }
 
-h5rd::dimensions h5rd::DataSpace::dims() const {
+inline h5rd::dimensions h5rd::DataSpace::dims() const {
+    if(!valid()) {
+        throw Exception("Tried requesting dims from invalid data space");
+    }
     dimensions result;
     result.resize(ndim());
     if (H5Sget_simple_extent_dims(id(), result.data(), nullptr) < 0) {
@@ -52,7 +55,10 @@ h5rd::dimensions h5rd::DataSpace::dims() const {
     return result;
 }
 
-h5rd::dimensions h5rd::DataSpace::maxDims() const {
+inline h5rd::dimensions h5rd::DataSpace::maxDims() const {
+    if(!valid()) {
+        throw Exception("Tried requesting maxDims from invalid data space");
+    }
     dimensions result;
     result.resize(ndim());
     if (H5Sget_simple_extent_dims(id(), nullptr, result.data()) < 0) {
@@ -61,18 +67,31 @@ h5rd::dimensions h5rd::DataSpace::maxDims() const {
     return result;
 }
 
-void h5rd::DataSpace::close() {
-    if(!_parentFile->closed() && valid()) {
+inline void h5rd::DataSpace::close() {
+    if(_parentFile && !_parentFile->closed() && valid()) {
         if(H5Sclose(id()) < 0) {
             throw Exception("Error on closing HDF5 data space");
         }
     }
 }
 
-h5rd::DataSpace::~DataSpace() {
+inline h5rd::DataSpace::~DataSpace() {
     try {
         close();
     } catch(const Exception &e) {
         std::cerr << "Unable to close hdf5 data space: " << e.what() << std::endl;
     }
 }
+
+inline h5rd::DataSpace::DataSpace(Object *parentFile, const dimensions &dims, const dimensions &maxDims) : Object(parentFile) {
+    if (maxDims.empty()) {
+        _hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
+    } else {
+        _hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), maxDims.data());
+    }
+    if (_hid < 0) {
+        throw Exception("Error on creating data space!");
+    }
+}
+
+inline h5rd::DataSpace::DataSpace() : Object(nullptr) {}

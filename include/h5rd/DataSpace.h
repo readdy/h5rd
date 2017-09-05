@@ -39,6 +39,10 @@ namespace h5rd {
 class DataSpace : public Object {
 public:
 
+    DataSpace();
+
+    DataSpace(Object *parentFile, const dimensions &dims, const dimensions &maxDims = {});
+
     ~DataSpace() override;
 
     std::size_t ndim() const;

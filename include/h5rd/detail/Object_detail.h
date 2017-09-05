@@ -34,10 +34,10 @@
 
 #include "../Object.h"
 
-h5rd::Object* h5rd::Object::parentFile() const {
+inline h5rd::Object* h5rd::Object::parentFile() const {
     return _parentFile;
 }
 
-bool h5rd::Object::closed() const {
+inline bool h5rd::Object::closed() const {
     return _closed;
 }
