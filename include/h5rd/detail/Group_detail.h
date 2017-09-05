@@ -34,7 +34,7 @@
 
 #include "../Group.h"
 
-inline h5rd::Group::Group(std::string path) : Object(), path(std::move(path)){}
+inline h5rd::Group::Group(std::string path, Object* parentFile) : Object(parentFile), path(std::move(path)){}
 
 inline h5rd::Group::~Group() {
     try {
@@ -45,7 +45,7 @@ inline h5rd::Group::~Group() {
 }
 
 void h5rd::Group::close() {
-    if(valid() && H5Gclose(id()) < 0) {
+    if(!_parentFile->closed() && valid() && H5Gclose(id()) < 0) {
         throw Exception("Error on closing HDF5 group");
     }
 }

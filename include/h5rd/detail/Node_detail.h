@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <h5rd/PropertyList.h>
 #include "../Node.h"
 #include "../Group.h"
 
@@ -49,6 +50,7 @@ inline h5rd::Group h5rd::Node<Container>::subgroup(const std::string &name) {
     }
     Group group(name);
     group._hid = gid;
+    group._parentFile = me()->parentFile();
     return group;
 }
 
@@ -100,16 +102,16 @@ inline std::vector<std::string> h5rd::Node<Container>::subgroups() const {
 template<typename Container>
 inline h5rd::Group h5rd::Node<Container>::createGroup(const std::string &path) {
     auto id = me()->id();
-    Group group(path);
+    Group group(path, me()->parentFile());
     if(util::groupExists(id, path)) {
         if((group._hid = H5Gopen(id, path.c_str(), H5P_DEFAULT)) < 0) {
             throw Exception("Failed to open group (" + path + ")");
         }
         return group;
     } else {
-        auto plist = H5Pcreate(H5P_LINK_CREATE);
-        H5Pset_create_intermediate_group(plist, 1);
-        if((group._hid = H5Gcreate(id, path.c_str(), plist, H5P_DEFAULT, H5P_DEFAULT)) < 0) {
+        LinkCreatePropertyList plist(me()->parentFile());
+        plist.set_create_intermediate_group();
+        if((group._hid = H5Gcreate(id, path.c_str(), plist.id(), H5P_DEFAULT, H5P_DEFAULT)) < 0) {
             throw Exception("Failed to create group with intermediates (" + path + ")");
         }
         return group;

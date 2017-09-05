@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file Object.h
+ * @file DataSpace_detail.h
  * @brief << brief description >>
  * @author clonker
  * @date 05.09.17
@@ -32,44 +32,47 @@
 
 #pragma once
 
-#include "common.h"
-#include "Exception.h"
+#include "../DataSpace.h"
+#include <iostream>
 
-namespace h5rd {
-
-template<typename Container> class Node;
-
-class Object {
-public:
-
-    explicit Object(Object* parentFile) : _parentFile(parentFile) {}
-
-    bool valid() const {
-        return _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
+std::size_t h5rd::DataSpace::ndim() const {
+    const auto n = H5Sget_simple_extent_ndims(id());
+    if (n < 0) {
+        throw Exception("Failed to retrieve ndims for data space");
     }
-
-    handle_id id() const {
-        return _hid;
-    }
-
-    virtual ~Object() = default;
-
-    virtual void close() = 0;
-
-    bool closed() const;
-
-    Object* parentFile() const;
-
-protected:
-    handle_id _hid {H5I_INVALID_HID};
-    Object* _parentFile {nullptr};
-    bool _closed {false};
-
-private:
-    template<typename Container>
-    friend class Node;
-};
-
+    return static_cast<std::size_t>(n);
 }
 
-#include "detail/Object_detail.h"
+h5rd::dimensions h5rd::DataSpace::dims() const {
+    dimensions result;
+    result.resize(ndim());
+    if (H5Sget_simple_extent_dims(id(), result.data(), nullptr) < 0) {
+        throw Exception("Failed to retrieve dims for data space");
+    }
+    return result;
+}
+
+h5rd::dimensions h5rd::DataSpace::maxDims() const {
+    dimensions result;
+    result.resize(ndim());
+    if (H5Sget_simple_extent_dims(id(), nullptr, result.data()) < 0) {
+        throw Exception("Failed to retrieve max dims for data space");
+    }
+    return result;
+}
+
+void h5rd::DataSpace::close() {
+    if(!_parentFile->closed() && valid()) {
+        if(H5Sclose(id()) < 0) {
+            throw Exception("Error on closing HDF5 data space");
+        }
+    }
+}
+
+h5rd::DataSpace::~DataSpace() {
+    try {
+        close();
+    } catch(const Exception &e) {
+        std::cerr << "Unable to close hdf5 data space: " << e.what() << std::endl;
+    }
+}

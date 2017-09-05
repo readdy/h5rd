@@ -56,19 +56,22 @@ inline int convertFlag(const h5rd::File::Flag &flag) {
 inline h5rd::File::File(const std::string &path, const Action &action, const Flag &flag)
         : File(path, action, Flags{flag}){}
 
-inline h5rd::File::File(const std::string &path, const Action &action, const Flags &flags) : path(path) {
+inline h5rd::File::File(const std::string &path, const Action &action, const Flags &flags) : Object(this), path(path) {
     unsigned flag = 0x0000u;
     for (const auto &f : flags) {
         flag = flag | convertFlag(f);
     }
+    FileAccessPropertyList fapl(_parentFile);
+    fapl.set_close_degree_strong();
+    fapl.set_use_latest_libver();
     handle_id val = 0;
     switch (action) {
         case Action::CREATE: {
-            val = H5Fcreate(path.c_str(), flag, H5P_DEFAULT, H5P_DEFAULT);
+            val = H5Fcreate(path.c_str(), flag, H5P_DEFAULT, fapl.id());
             break;
         }
         case Action::OPEN: {
-            val = H5Fopen(path.c_str(), flag, H5P_DEFAULT);
+            val = H5Fopen(path.c_str(), flag, fapl.id());
             break;
         }
     }
@@ -76,6 +79,7 @@ inline h5rd::File::File(const std::string &path, const Action &action, const Fla
         throw Exception("Failed on opening/creating file " + path);
     }
     _hid = val;
+    _parentFile = this;
 }
 
 inline void h5rd::File::flush() {
@@ -93,9 +97,10 @@ inline h5rd::File::~File() {
 }
 
 void h5rd::File::close() {
-    if(valid()) {
+    if(!closed() && valid()) {
         if(H5Fclose(id()) < 0) {
             throw Exception("Error on closing HDF5 file \"" + path + "\"");
         }
+        _closed = true;
     }
 }

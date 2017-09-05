@@ -39,9 +39,9 @@ namespace h5rd {
 
 class Group : public Object, public Node<Group> {
 public:
-    explicit Group(std::string path);
+    explicit Group(std::string path, Object* parentFile);
 
-    ~Group();
+    ~Group() override;
 
     void close() override;
 

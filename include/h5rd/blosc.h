@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file Object.h
+ * @file blosc.h
  * @brief << brief description >>
  * @author clonker
  * @date 05.09.17
@@ -32,44 +32,14 @@
 
 #pragma once
 
-#include "common.h"
-#include "Exception.h"
+#include <H5Ipublic.h>
 
 namespace h5rd {
+namespace blosc_compression {
 
-template<typename Container> class Node;
+void initialize();
 
-class Object {
-public:
-
-    explicit Object(Object* parentFile) : _parentFile(parentFile) {}
-
-    bool valid() const {
-        return _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
-    }
-
-    handle_id id() const {
-        return _hid;
-    }
-
-    virtual ~Object() = default;
-
-    virtual void close() = 0;
-
-    bool closed() const;
-
-    Object* parentFile() const;
-
-protected:
-    handle_id _hid {H5I_INVALID_HID};
-    Object* _parentFile {nullptr};
-    bool _closed {false};
-
-private:
-    template<typename Container>
-    friend class Node;
-};
+void activate(hid_t plist, unsigned int *cd_values);
 
 }
-
-#include "detail/Object_detail.h"
+}

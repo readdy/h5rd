@@ -43,13 +43,12 @@ TEST(TestH5ReaDDy, Sanity) {
         std::cout << "/ exists: " << f.exists("/") << std::endl;
         auto g = f.createGroup("/foo/bar");
         std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
+        f.close();
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+        File f2("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
+        std::cout << "/ exists: " << f2.exists("/") << std::endl;
+        auto g2 = f2.createGroup("/foo/bar");
+        std::cout << "foo/bar exists: " << f2.exists("/foo/bar") << std::endl;
     }
 
 

@@ -37,6 +37,8 @@
 namespace h5rd {
 
 class DataSet : public Object {
+public:
+    explicit DataSet(Object *parentFile) : Object(parentFile) {}
 
 };
 

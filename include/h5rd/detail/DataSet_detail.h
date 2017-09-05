@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file Object.h
+ * @file DataSet_detail.h
  * @brief << brief description >>
  * @author clonker
  * @date 05.09.17
@@ -32,44 +32,3 @@
 
 #pragma once
 
-#include "common.h"
-#include "Exception.h"
-
-namespace h5rd {
-
-template<typename Container> class Node;
-
-class Object {
-public:
-
-    explicit Object(Object* parentFile) : _parentFile(parentFile) {}
-
-    bool valid() const {
-        return _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
-    }
-
-    handle_id id() const {
-        return _hid;
-    }
-
-    virtual ~Object() = default;
-
-    virtual void close() = 0;
-
-    bool closed() const;
-
-    Object* parentFile() const;
-
-protected:
-    handle_id _hid {H5I_INVALID_HID};
-    Object* _parentFile {nullptr};
-    bool _closed {false};
-
-private:
-    template<typename Container>
-    friend class Node;
-};
-
-}
-
-#include "detail/Object_detail.h"

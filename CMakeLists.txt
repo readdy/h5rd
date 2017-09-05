@@ -8,15 +8,23 @@ option(READDY_IO_TEST "Build tests?" ON)
 set(READDY_IO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(READDY_IO_HEADERS
         include/h5rd/common.h
+        include/h5rd/blosc.h
         include/h5rd/Exception.h
         include/h5rd/Node.h
         include/h5rd/Object.h
         include/h5rd/Group.h
         include/h5rd/DataSet.h
+        include/h5rd/DataSetType.h
+        include/h5rd/PropertyList.h
+        include/h5rd/DataSpace.h
         include/h5rd/File.h
+        include/h5rd/detail/DataSet_detail.h
+        include/h5rd/detail/Object_detail.h
         include/h5rd/detail/Node_detail.h
         include/h5rd/detail/Group_detail.h
         include/h5rd/detail/File_detail.h
+        include/h5rd/detail/DataSpace_detail.h
+        include/h5rd/detail/DataSetType_detail.h
         )
 
 string(REPLACE "include/" "${CMAKE_CURRENT_SOURCE_DIR}/include/" READDY_IO_HEADERS "${READDY_IO_HEADERS}")

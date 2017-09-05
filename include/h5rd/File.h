@@ -54,7 +54,7 @@ public:
 
     File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
 
-    ~File();
+    ~File() override;
 
     void flush();
 
