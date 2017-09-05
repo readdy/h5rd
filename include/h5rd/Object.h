@@ -23,36 +23,39 @@
 /**
  * << detailed description >>
  *
- * @file TestMain.cpp
+ * @file Object.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include "gtest/gtest.h"
-#include "h5rd/File.h"
+#pragma once
 
-namespace {
+#include "common.h"
 
-TEST(TestH5ReaDDy, Sanity) {
-    using namespace h5rd;
+namespace h5rd {
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+template<typename Container> class Node;
+
+class Object {
+public:
+    bool valid() const {
+        return _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
     }
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+    handle_id id() const {
+        return _hid;
     }
 
+    virtual void close() = 0;
 
-}
+protected:
+    handle_id _hid;
+
+private:
+    template<typename Container>
+    friend class Node;
+};
 
 }

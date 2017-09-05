@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2017 Computational Molecular Biology Group,          * 
+ * Copyright © 2016 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,36 +23,19 @@
 /**
  * << detailed description >>
  *
- * @file TestMain.cpp
+ * @file Types.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 04/01/2017
  * @copyright GNU Lesser General Public License v3.0
  */
+#pragma once
 
-#include "gtest/gtest.h"
-#include "h5rd/File.h"
+#include <vector>
 
-namespace {
+#include <hdf5.h>
 
-TEST(TestH5ReaDDy, Sanity) {
-    using namespace h5rd;
+namespace h5readdy {
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
-
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
-
-
-}
 
 }

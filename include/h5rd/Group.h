@@ -23,36 +23,32 @@
 /**
  * << detailed description >>
  *
- * @file TestMain.cpp
+ * @file Group.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include "gtest/gtest.h"
-#include "h5rd/File.h"
+#pragma once
 
-namespace {
+#include "Object.h"
+#include "Node.h"
 
-TEST(TestH5ReaDDy, Sanity) {
-    using namespace h5rd;
+namespace h5rd {
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
+class Group : public Object, public Node<Group> {
+public:
+    explicit Group(std::string path);
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
+    ~Group();
 
+    void close() override;
+
+private:
+    std::string path;
+};
 
 }
 
-}
+#include "detail/Group_detail.h"

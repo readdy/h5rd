@@ -7,27 +7,21 @@ option(READDY_IO_TEST "Build tests?" ON)
 
 set(READDY_IO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(READDY_IO_HEADERS
-        include/h5readdy/h5readdy.h
-        include/h5readdy/traits.h
-        include/h5readdy/DataSet.h
-        include/h5readdy/DataSetType.h
-        include/h5readdy/DataSpace.h
-        include/h5readdy/File.h
-        include/h5readdy/Group.h
-        include/h5readdy/H5Types.h
-        include/h5readdy/Object.h
-        include/h5readdy/PropertyList.h
-        include/h5readdy/bits/File_bits.h
-        include/h5readdy/bits/DataSet_bits.h
-        include/h5readdy/bits/DataSetType_bits.h
-        include/h5readdy/bits/DataSpace_bits.h
-        include/h5readdy/bits/Group_bits.h
-        include/h5readdy/bits/String_utils.h
-        include/h5readdy/bits/Util_bits.h)
+        include/h5rd/common.h
+        include/h5rd/Exception.h
+        include/h5rd/Node.h
+        include/h5rd/Object.h
+        include/h5rd/Group.h
+        include/h5rd/DataSet.h
+        include/h5rd/File.h
+        include/h5rd/detail/Node_detail.h
+        include/h5rd/detail/Group_detail.h
+        include/h5rd/detail/File_detail.h
+        )
 
 string(REPLACE "include/" "${CMAKE_CURRENT_SOURCE_DIR}/include/" READDY_IO_HEADERS "${READDY_IO_HEADERS}")
 
-find_package(HDF5 COMPONENTS C HL REQUIRED)
+find_package(HDF5 REQUIRED)
 message(STATUS "HDF5_FOUND: ${HDF5_FOUND}, version ${HDF5_VERSION}")
 
 if (READDY_IO_TEST)

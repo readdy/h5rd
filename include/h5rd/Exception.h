@@ -23,36 +23,56 @@
 /**
  * << detailed description >>
  *
- * @file TestMain.cpp
+ * @file Exception.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include "gtest/gtest.h"
-#include "h5rd/File.h"
+#pragma once
 
-namespace {
+#include <utility>
+#include <sstream>
+#include <exception>
+#include <H5Epublic.h>
+#include "common.h"
 
-TEST(TestH5ReaDDy, Sanity) {
-    using namespace h5rd;
+namespace h5rd {
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+
+class Exception : public std::runtime_error {
+public:
+    explicit Exception(const std::string &msg) : std::runtime_error(h5stack(msg)) {}
+
+    static std::string h5stack(const std::string &msg) {
+        handle_id stackId = H5Eget_current_stack();
+        if(stackId >= 0) {
+
+            H5E_walk2_t walker = [](unsigned int n, const H5E_error2_t* desc, void* clientData) -> herr_t {
+
+                auto* ss = static_cast<std::stringstream*>(clientData);
+
+                char* major_err = H5Eget_major(desc->maj_num);
+                char* minor_err = H5Eget_minor(desc->min_num);
+
+                std::string err_string("(");
+                err_string += major_err;
+                err_string += ") ";
+                err_string += minor_err;
+
+                free(major_err);
+                free(minor_err);
+
+                *ss << err_string << std::endl;
+                return 0;
+            };
+
+            std::stringstream ss;
+            H5Ewalk2(stackId, H5E_WALK_UPWARD, walker, &ss);
+            return msg + ": " + ss.str();
+        }
+        return msg + ": Unknown hdf5 error!";
     }
-
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
-
-
-}
-
+};
 }

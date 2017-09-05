@@ -23,36 +23,49 @@
 /**
  * << detailed description >>
  *
- * @file TestMain.cpp
+ * @file Node.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include "gtest/gtest.h"
-#include "h5rd/File.h"
+#pragma once
 
-namespace {
+#include "Exception.h"
 
-TEST(TestH5ReaDDy, Sanity) {
-    using namespace h5rd;
+namespace h5rd {
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+class Group;
+
+template<typename Container>
+class Node {
+public:
+    Group createGroup(const std::string &path);
+
+    std::vector<std::string> subgroups() const;
+
+    std::vector<std::string> containedDataSets() const;
+
+    Group subgroup(const std::string &name);
+
+    bool exists(const std::string& name) const;
+
+    group_info info() const;
+
+private:
+
+    std::vector<std::string> sub_elements(H5O_type_t type) const;
+
+    Container* me() {
+        return static_cast<Container*>(this);
     }
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+    const Container* me() const {
+        return static_cast<const Container*>(this);
     }
-
+};
 
 }
 
-}
+#include "detail/Node_detail.h"

@@ -23,29 +23,21 @@
 /**
  * << detailed description >>
  *
- * @file traits.h
+ * @file DataSet.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
-#include <array>
+#include "Object.h"
 
-namespace h5readdy {
-namespace util {
+namespace h5rd {
 
-template<typename T>
-struct is_std_array : public std::false_type {};
+class DataSet : public Object {
 
-template<typename T, std::size_t N>
-struct is_std_array<std::array<T, N>> : public std::true_type {};
+};
 
-template<typename... Ts>
-struct make_void {typedef void type;};
-template<typename... Ts> using void_t = typename make_void<Ts...>::type;
-
-}
 }

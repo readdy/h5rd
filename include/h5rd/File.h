@@ -23,36 +23,47 @@
 /**
  * << detailed description >>
  *
- * @file TestMain.cpp
+ * @file File.h
  * @brief << brief description >>
  * @author clonker
- * @date 04.09.17
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include "gtest/gtest.h"
-#include "h5rd/File.h"
+#pragma once
 
-namespace {
+#include "Object.h"
+#include "Node.h"
 
-TEST(TestH5ReaDDy, Sanity) {
-    using namespace h5rd;
+namespace h5rd {
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
+class File : public Object, public Node<File> {
+public:
 
-    {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
-    }
+    enum class Action {
+        CREATE, OPEN
+    };
 
+    enum class Flag {
+        READ_ONLY = 0, READ_WRITE, OVERWRITE, FAIL_IF_EXISTS, CREATE_NON_EXISTING, DEFAULT /* = rw, create, truncate */
+    };
+
+    using Flags = std::vector<Flag>;
+
+    File(const std::string &path, const Action &action, const Flags &flags);
+
+    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
+
+    ~File();
+
+    void flush();
+
+    void close() override;
+
+private:
+    std::string path;
+};
 
 }
 
-}
+#include "detail/File_detail.h"

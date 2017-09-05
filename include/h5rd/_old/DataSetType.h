@@ -35,7 +35,7 @@
 
 #include "H5Types.h"
 #include "Object.h"
-#include "traits.h"
+#include "h5rd/utilities.h"
 
 namespace h5readdy {
 

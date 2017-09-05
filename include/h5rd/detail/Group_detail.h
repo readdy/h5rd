@@ -1,5 +1,5 @@
 /********************************************************************
- * Copyright © 2016 Computational Molecular Biology Group,          * 
+ * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
  *                                                                  *
  * This file is part of ReaDDy.                                     *
@@ -23,24 +23,29 @@
 /**
  * << detailed description >>
  *
- * @file Types.h
+ * @file Group_detail.h
  * @brief << brief description >>
  * @author clonker
- * @date 04/01/2017
+ * @date 05.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
 #pragma once
 
-#include <vector>
+#include "../Group.h"
 
-#include <hdf5.h>
+inline h5rd::Group::Group(std::string path) : Object(), path(std::move(path)){}
 
-namespace h5readdy {
+inline h5rd::Group::~Group() {
+    try {
+        close();
+    } catch(const Exception &e) {
+        std::cerr << "Unable to close hdf5 group: " << e.what() << std::endl;
+    }
+}
 
-using handle_id = hid_t;
-using dimension = hsize_t;
-using dimensions = std::vector<dimension>;
-using group_info = H5G_info_t;
-const static unsigned long long UNLIMITED_DIMS = H5S_UNLIMITED;
-
+void h5rd::Group::close() {
+    if(valid() && H5Gclose(id()) < 0) {
+        throw Exception("Error on closing HDF5 group");
+    }
 }
