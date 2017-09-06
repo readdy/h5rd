@@ -7,6 +7,7 @@ option(READDY_IO_TEST "Build tests?" ON)
 
 set(READDY_IO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(READDY_IO_HEADERS
+        include/h5rd/h5rd.h
         include/h5rd/common.h
         include/h5rd/Exception.h
         include/h5rd/Node.h

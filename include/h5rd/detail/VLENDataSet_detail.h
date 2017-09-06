@@ -37,8 +37,8 @@
 
 namespace h5rd {
 
-inline VLENDataSet::VLENDataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType)
-        : Object(parentFile), _memoryType(memoryType), _fileType(fileType) {}
+inline VLENDataSet::VLENDataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType)
+        : SubObject(parentFile), _memoryType(memoryType), _fileType(fileType) {}
 
 inline std::shared_ptr<DataSpace> VLENDataSet::getFileSpace() const {
     auto _hid = H5Dget_space(id());
@@ -63,12 +63,15 @@ inline void VLENDataSet::flush() {
 }
 
 inline void VLENDataSet::close() {
-    if (_parentFile && !_parentFile->closed() && valid() && H5Dclose(id()) < 0) {
-        throw Exception("Error on closing HDF5 vlen data set");
+    auto pf = _parentFile.lock();
+    if (pf) {
+        if (!pf->closed() && valid() && H5Dclose(id()) < 0) {
+            throw Exception("Error on closing HDF5 vlen data set");
+        }
     }
 }
 
-inline VLENDataSet::~DataSet() {
+inline VLENDataSet::~VLENDataSet() {
     try {
         close();
     } catch (const Exception &e) {

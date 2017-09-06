@@ -23,7 +23,7 @@
 /**
  * << detailed description >>
  *
- * @file VLENDataSet.h
+ * @file h5rd.h
  * @brief << brief description >>
  * @author clonker
  * @date 06.09.17
@@ -32,41 +32,12 @@
 
 #pragma once
 
-#include <memory>
-#include "Object.h"
+#include "File.h"
+#include "Node.h"
+#include "Group.h"
+#include "DataSet.h"
+#include "VLENDataSet.h"
 #include "DataSetType.h"
-
-namespace h5rd {
-
-class VLENDataSet : public SubObject {
-public:
-    VLENDataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType);
-
-    template<typename T>
-    void append(std::vector<std::vector<T>> &data);
-
-    template<typename T>
-    void append(const dimensions &dims, const std::vector<T> *data);
-
-    ~VLENDataSet() override;
-
-    void close() override;
-
-    void flush();
-
-    std::shared_ptr<DataSpace> getFileSpace() const;
-
-    dimension &extensionDim();
-
-    const dimension &extensionDim() const;
-
-private:
-    dimension _extensionDim;
-    std::unique_ptr<DataSpace> _memorySpace{nullptr};
-    DataSetType _memoryType;
-    DataSetType _fileType;
-};
-
-}
-
-#include "detail/VLENDataSet_detail.h"
+#include "DataSpace.h"
+#include "Filter.h"
+#include "PropertyList.h"

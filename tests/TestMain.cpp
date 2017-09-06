@@ -31,7 +31,7 @@
  */
 
 #include "gtest/gtest.h"
-#include "h5rd/File.h"
+#include "h5rd/h5rd.h"
 
 namespace {
 
