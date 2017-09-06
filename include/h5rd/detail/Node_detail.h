@@ -34,11 +34,13 @@
 
 #include <H5LTpublic.h>
 
+#include "../Exception.h"
 #include "../PropertyList.h"
 #include "../Node.h"
 #include "../Group.h"
 #include "../DataSet.h"
 #include "../common.h"
+
 #include "String_utils.h"
 
 template<typename Container>
@@ -47,10 +49,10 @@ inline bool h5rd::Node<Container>::exists(const std::string &name) const {
 }
 
 template<typename Container>
-inline h5rd::Group h5rd::Node<Container>::subgroup(const std::string &name) {
+inline h5rd::Group h5rd::Node<Container>::getSubgroup(const std::string &name) {
     auto id = me()->id();
     auto gid = H5Gopen(id, name.data(), H5P_DEFAULT);
-    if(gid < 0) {
+    if (gid < 0) {
         throw Exception("Could not open subgroup " + name + "!");
     }
     Group group(name, me()->parentFile());
@@ -61,31 +63,32 @@ inline h5rd::Group h5rd::Node<Container>::subgroup(const std::string &name) {
 template<typename Container>
 inline h5rd::group_info h5rd::Node<Container>::info() const {
     auto id = me()->id();
-    group_info info {};
-    if(H5Gget_info(id, &info) < 0) {
+    group_info info{};
+    if (H5Gget_info(id, &info) < 0) {
         throw Exception("Failed to get group info!");
     }
     return info;
 }
 
 template<typename Container>
-inline std::vector<std::string> h5rd::Node<Container>::sub_elements(H5O_type_t type) const {
+inline std::vector<std::string> h5rd::Node<Container>::subElements(H5O_type_t type) const {
     auto id = me()->id();
     std::vector<std::string> result;
     auto group_info = info();
     result.reserve(group_info.nlinks);
-    for(std::size_t i=0; i < group_info.nlinks; ++i) {
-        H5O_info_t oinfo {};
+    for (std::size_t i = 0; i < group_info.nlinks; ++i) {
+        H5O_info_t oinfo{};
         H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
-        if(oinfo.type == type) {
-            auto size = 1+ H5Lget_name_by_idx (id, ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
-            if(size < 0) {
+        if (oinfo.type == type) {
+            auto size = 1 + H5Lget_name_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
+            if (size < 0) {
                 H5Eprint(H5Eget_current_stack(), stderr);
             }
 
-            std::vector<char> c_string (static_cast<std::size_t>(size));
-            H5Lget_name_by_idx (id, ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string.data(), (std::size_t) size, H5P_DEFAULT);
-            std::string label (c_string.data());
+            std::vector<char> c_string(static_cast<std::size_t>(size));
+            H5Lget_name_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, c_string.data(), (std::size_t) size,
+                               H5P_DEFAULT);
+            std::string label(c_string.data());
 
             result.push_back(std::move(label));
         }
@@ -95,27 +98,27 @@ inline std::vector<std::string> h5rd::Node<Container>::sub_elements(H5O_type_t t
 
 template<typename Container>
 inline std::vector<std::string> h5rd::Node<Container>::containedDataSets() const {
-    return sub_elements(H5O_TYPE_DATASET);
+    return subElements(H5O_TYPE_DATASET);
 }
 
 template<typename Container>
 inline std::vector<std::string> h5rd::Node<Container>::subgroups() const {
-    return sub_elements(H5O_TYPE_GROUP);
+    return subElements(H5O_TYPE_GROUP);
 }
 
 template<typename Container>
 inline h5rd::Group h5rd::Node<Container>::createGroup(const std::string &path) {
     auto id = me()->id();
     Group group(path, me()->parentFile());
-    if(util::groupExists(id, path)) {
-        if((group._hid = H5Gopen(id, path.c_str(), H5P_DEFAULT)) < 0) {
+    if (util::groupExists(id, path)) {
+        if ((group._hid = H5Gopen(id, path.c_str(), H5P_DEFAULT)) < 0) {
             throw Exception("Failed to open group (" + path + ")");
         }
         return group;
     } else {
         LinkCreatePropertyList plist(me()->parentFile());
         plist.set_create_intermediate_group();
-        if((group._hid = H5Gcreate(id, path.c_str(), plist.id(), H5P_DEFAULT, H5P_DEFAULT)) < 0) {
+        if ((group._hid = H5Gcreate(id, path.c_str(), plist.id(), H5P_DEFAULT, H5P_DEFAULT)) < 0) {
             throw Exception("Failed to create group with intermediates (" + path + ")");
         }
         return group;
@@ -129,15 +132,15 @@ inline void h5rd::Node<Container>::write(const std::string &dataSetName, const s
     H5Tset_cset(stdstr.id(), H5T_CSET_UTF8);
     H5Tset_cset(nativestr.id(), H5T_CSET_UTF8);
 
-    if(H5LTmake_dataset_string(me()->id(), dataSetName.c_str(), string.c_str()) < 0) {
-        throw Exception("there was a problem with writing \""+string+"\" into a hdf5 file.");
+    if (H5LTmake_dataset_string(me()->id(), dataSetName.c_str(), string.c_str()) < 0) {
+        throw Exception("there was a problem with writing \"" + string + "\" into a hdf5 file.");
     }
 }
 
 template<typename Container>
 template<typename T>
 inline void h5rd::Node<Container>::write(const std::string &dataSetName, const std::vector<T> &data) {
-    if(std::is_same<typename std::decay<T>::type, std::string>::value) {
+    if (std::is_same<typename std::decay<T>::type, std::string>::value) {
         util::writeVector(me()->id(), dataSetName, data);
     } else {
         write(dataSetName, {data.size()}, data.data());
@@ -146,25 +149,36 @@ inline void h5rd::Node<Container>::write(const std::string &dataSetName, const s
 
 namespace {
 template<typename T>
-inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const T* data) {}
+inline void
+help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const T *data) {}
+
 template<>
-inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const short* data) {
+inline void
+help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const short *data) {
     H5LTmake_dataset_short(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
+
 template<>
-inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const int* data) {
+inline void
+help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const int *data) {
     H5LTmake_dataset_int(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
+
 template<>
-inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const long* data) {
+inline void
+help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const long *data) {
     H5LTmake_dataset_long(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
+
 template<>
-inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const float* data) {
+inline void
+help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const float *data) {
     H5LTmake_dataset_float(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
+
 template<>
-inline void help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const double* data) {
+inline void
+help_write(h5rd::handle_id handle, const std::string &dsname, const h5rd::dimensions &dims, const double *data) {
     H5LTmake_dataset_double(handle, dsname.data(), static_cast<int>(dims.size()), dims.data(), data);
 }
 }
@@ -181,16 +195,16 @@ template<typename Container>
 template<typename T>
 inline std::unique_ptr<h5rd::DataSet> h5rd::Node<Container>::createDataSet(
         const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
-        h5rd::DataSetCompression compression) {
+        const FilterConfiguration &filters) {
     return createDataSet(name, chunkSize, maxDims, STDDataSetType<T>(me()->parentFile()),
-                         NativeDataSetType<T>(me()->parentFile()), compression);
+                         NativeDataSetType<T>(me()->parentFile()), filters);
 }
 
 template<typename Container>
 inline std::unique_ptr<h5rd::DataSet>
 h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimensions &chunkSize,
                                      const h5rd::dimensions &maxDims, const h5rd::DataSetType &memoryType,
-                                     const h5rd::DataSetType &fileType, h5rd::DataSetCompression compression) {
+                                     const h5rd::DataSetType &fileType, const FilterConfiguration &filters) {
     dimension extensionDim;
     {
         std::stringstream result;
@@ -213,9 +227,12 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
         dimensions dims(maxDims.begin(), maxDims.end());
         dims[extensionDim] = 0;
         DataSpace fileSpace(me()->parentFile(), dims, maxDims);
-        DataSetCreatePropertyList propertyList (me()->parentFile());
+        DataSetCreatePropertyList propertyList(me()->parentFile());
         propertyList.set_layout_chunked();
         propertyList.set_chunk(chunkSize);
+        for (auto f : filters) {
+            propertyList.activate_filter(f);
+        }
 
         auto _hid = H5Dcreate(me()->id(), name.c_str(), fileType.id(),
                               fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
@@ -234,8 +251,8 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
 template<typename Container>
 template<typename T>
 inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array) {
-    STDDataSetType<T> stdDST (me()->parentFile());
-    NativeDataSetType<T> nDST (me()->parentFile());
+    STDDataSetType<T> stdDST(me()->parentFile());
+    NativeDataSetType<T> nDST(me()->parentFile());
     read(dataSetName, array, &stdDST, &nDST);
 }
 
@@ -248,7 +265,7 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     const auto n_array_dims = 1 + util::n_dims<T>::value;
     auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
 
-    DataSpace memorySpace (me()->parentFile(), H5Dget_space(hid));
+    DataSpace memorySpace(me()->parentFile(), H5Dget_space(hid));
 
     const auto ndim = memorySpace.ndim();
 
@@ -259,7 +276,7 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
 
     const auto dims = memorySpace.dims();
     std::size_t required_length = 1;
-    for(const auto dim : dims) {
+    for (const auto dim : dims) {
         // todo log::trace("dim len = {}", dim);
         required_length *= dim;
     }
@@ -268,9 +285,9 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
 
     auto result = H5Dread(hid, memoryType->id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
 
-    if(result < 0) {
+    if (result < 0) {
         // todo log::trace("Failed reading result!");
-        throw Exception("Failed reading \""+ dataSetName +"\"!");
+        throw Exception("Failed reading \"" + dataSetName + "\"!");
     }
 
     H5Dclose(hid);
@@ -282,4 +299,14 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     //}
 
     // todo reshape array to dims
+}
+
+template<typename Container>
+inline Container *h5rd::Node<Container>::me() {
+    return static_cast<Container *>(this);
+}
+
+template<typename Container>
+inline const Container *h5rd::Node<Container>::me() const {
+    return static_cast<const Container *>(this);
 }

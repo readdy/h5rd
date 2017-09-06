@@ -40,6 +40,20 @@
 
 namespace h5rd {
 
+class Filter;
+class Group;
+class DataSet;
+class VLENDataSet;
+template<typename T>
+class STDDataSetType;
+template<typename T>
+class NativeDataSetType;
+template<typename Container>
+class Node;
+class DataSpace;
+class DataSetType;
+
+
 using handle_id = hid_t;
 using dimension = hsize_t;
 using dimensions = std::vector<dimension>;

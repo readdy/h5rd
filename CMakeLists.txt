@@ -10,21 +10,25 @@ set(READDY_IO_HEADERS
         include/h5rd/common.h
         include/h5rd/Exception.h
         include/h5rd/Node.h
-        include/h5rd/Object.h
-        include/h5rd/Group.h
-        include/h5rd/DataSet.h
-        include/h5rd/DataSetType.h
-        include/h5rd/DataSetCompression.h
-        include/h5rd/PropertyList.h
-        include/h5rd/DataSpace.h
-        include/h5rd/File.h
-        include/h5rd/detail/DataSet_detail.h
-        include/h5rd/detail/Object_detail.h
         include/h5rd/detail/Node_detail.h
+        include/h5rd/Object.h
+        include/h5rd/detail/Object_detail.h
+        include/h5rd/Group.h
         include/h5rd/detail/Group_detail.h
-        include/h5rd/detail/File_detail.h
-        include/h5rd/detail/DataSpace_detail.h
+        include/h5rd/DataSet.h
+        include/h5rd/VLENDataSet.h
+        include/h5rd/detail/DataSet_detail.h
+        include/h5rd/detail/VLENDataSet_detail.h
+        include/h5rd/DataSetType.h
         include/h5rd/detail/DataSetType_detail.h
+        include/h5rd/Filter.h
+        include/h5rd/detail/Filter_detail.h
+        include/h5rd/PropertyList.h
+        include/h5rd/detail/PropertyList_detail.h
+        include/h5rd/DataSpace.h
+        include/h5rd/detail/DataSpace_detail.h
+        include/h5rd/File.h
+        include/h5rd/detail/File_detail.h
         include/h5rd/detail/String_utils.h
         )
 

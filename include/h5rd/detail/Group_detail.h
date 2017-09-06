@@ -33,6 +33,7 @@
 #pragma once
 
 #include "../Group.h"
+#include "../Node.h"
 
 inline h5rd::Group::Group(std::string path, Object *parentFile) : Object(parentFile), path(std::move(path)) {}
 

@@ -42,7 +42,7 @@ inline h5rd::DataSetType::DataSetType(handle_id hid, Object *parentFile) : Objec
 inline h5rd::DataSetType::DataSetType(const DataSetType &rhs) : Object(rhs._parentFile) {
     _hid = rhs._hid;
     _closed = rhs._closed;
-    if(_parentFile && !_parentFile->closed() && valid()) {
+    if(/*_parentFile && !_parentFile->closed() && */valid()) {
         if(H5Iinc_ref(_hid) < 0) {
             throw Exception("Error on increase HDF5 reference counter for data type");
         }
@@ -59,7 +59,7 @@ inline h5rd::DataSetType &h5rd::DataSetType::operator=(const h5rd::DataSetType &
         _hid = rhs._hid;
         _closed = rhs._closed;
         _parentFile = rhs._parentFile;
-        if(_parentFile && !_parentFile->closed() && valid()) {
+        if(/*_parentFile && !_parentFile->closed() && */valid()) {
             if(H5Iinc_ref(_hid) < 0) {
                 throw Exception("Error in increase HDF5 reference counter for data type, copy assign");
             }
@@ -77,7 +77,7 @@ inline h5rd::DataSetType::~DataSetType() {
 }
 
 inline void h5rd::DataSetType::close() {
-    if (_parentFile && !_parentFile->closed() && valid()) {
+    if (/*_parentFile && !_parentFile->closed() && */valid()) {
         if (H5Idec_ref(id()) < 0) {
             throw Exception("Error on decrease HDF5 reference counter for data type");
         }

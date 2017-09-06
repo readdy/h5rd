@@ -33,7 +33,6 @@
 #pragma once
 
 #include "Object.h"
-#include "Node.h"
 
 namespace h5rd {
 

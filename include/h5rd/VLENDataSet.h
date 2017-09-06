@@ -23,17 +23,50 @@
 /**
  * << detailed description >>
  *
- * @file DataSetCompression.h
+ * @file VLENDataSet.h
  * @brief << brief description >>
  * @author clonker
- * @date 05.09.17
+ * @date 06.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
 
 #pragma once
 
+#include <memory>
+#include "Object.h"
+#include "DataSetType.h"
+
 namespace h5rd {
-enum DataSetCompression {
-    none = 0x0000, blosc = 0x0001
+
+class VLENDataSet : public Object {
+public:
+    VLENDataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType);
+
+    template<typename T>
+    void append(std::vector<std::vector<T>> &data);
+
+    template<typename T>
+    void append(const dimensions &dims, const std::vector<T> * data);
+
+    ~DataSet() override;
+
+    void close() override;
+
+    void flush();
+
+    std::shared_ptr<DataSpace> getFileSpace() const;
+
+    dimension &extensionDim();
+
+    const dimension &extensionDim() const;
+
+private:
+    dimension _extensionDim;
+    std::unique_ptr<DataSpace> _memorySpace{nullptr};
+    DataSetType _memoryType;
+    DataSetType _fileType;
 };
+
 }
+
+#include "detail/VLENDataSet_detail.h"

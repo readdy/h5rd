@@ -34,7 +34,6 @@
 
 #include <memory>
 #include "Object.h"
-#include "DataSpace.h"
 #include "DataSetType.h"
 
 namespace h5rd {

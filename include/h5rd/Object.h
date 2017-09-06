@@ -37,12 +37,6 @@
 
 namespace h5rd {
 
-template<typename Container>
-class Node;
-
-class DataSpace;
-class DataSetType;
-
 class Object {
 public:
 

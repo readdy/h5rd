@@ -32,28 +32,25 @@
 
 #pragma once
 
-#include "Exception.h"
-#include "DataSetCompression.h"
+#include "common.h"
 
 namespace h5rd {
-
-class Group;
-class DataSet;
-template<typename T> class STDDataSetType;
-template<typename T> class NativeDataSetType;
 
 template<typename Container>
 class Node {
 public:
+
+    using FilterConfiguration = std::vector<Filter *>;
+
     Group createGroup(const std::string &path);
 
     std::vector<std::string> subgroups() const;
 
     std::vector<std::string> containedDataSets() const;
 
-    Group subgroup(const std::string &name);
+    Group getSubgroup(const std::string &name);
 
-    bool exists(const std::string& name) const;
+    bool exists(const std::string &name) const;
 
     group_info info() const;
 
@@ -72,25 +69,21 @@ public:
     void read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType);
 
     template<typename T>
-    std::unique_ptr<DataSet> createDataSet(const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
-                          DataSetCompression compression = DataSetCompression::blosc);
+    std::unique_ptr<DataSet> createDataSet(const std::string &name, const dimensions &chunkSize,
+                                           const dimensions &maxDims, const FilterConfiguration &filters = {});
 
     std::unique_ptr<DataSet> createDataSet(const std::string &name, const dimensions &chunkSize,
-                          const dimensions &maxDims, const DataSetType &memoryType,
-                          const DataSetType &fileType, DataSetCompression compression = DataSetCompression::blosc);
+                                           const dimensions &maxDims, const DataSetType &memoryType,
+                                           const DataSetType &fileType, const FilterConfiguration &filters = {});
 
 
 private:
 
-    std::vector<std::string> sub_elements(H5O_type_t type) const;
+    std::vector<std::string> subElements(H5O_type_t type) const;
 
-    Container* me() {
-        return static_cast<Container*>(this);
-    }
+    Container *me();
 
-    const Container* me() const {
-        return static_cast<const Container*>(this);
-    }
+    const Container *me() const;
 };
 
 }

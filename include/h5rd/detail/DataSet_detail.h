@@ -48,7 +48,7 @@ inline h5rd::DataSet::~DataSet() {
 }
 
 inline void h5rd::DataSet::close() {
-    if(!_parentFile->closed() && valid() && H5Dclose(id()) < 0) {
+    if(_parentFile && !_parentFile->closed() && valid() && H5Dclose(id()) < 0) {
         throw Exception("Error on closing HDF5 data set");
     }
 }

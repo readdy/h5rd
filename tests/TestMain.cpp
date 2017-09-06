@@ -99,7 +99,7 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
     }
     {
         File f("test.h5", File::Action::OPEN, File::Flag::READ_ONLY);
-        auto group = f.subgroup("/my/compound/group");
+        auto group = f.getSubgroup("/my/compound/group");
         auto types = getCompoundTypes(f.parentFile());
         std::vector<Stuff> stuffs;
         group.read("stuffs", stuffs, &std::get<0>(types), &std::get<1>(types));
@@ -143,7 +143,7 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
 
     {
         File f2("test.h5", File::Action::OPEN, File::Flag::READ_ONLY);
-        auto group2 = f2.subgroup("/my/compound/group");
+        auto group2 = f2.getSubgroup("/my/compound/group");
         auto types2 = getCompoundTypes(f2.parentFile());
         std::vector<Stuff> stuffs2;
         group2.read("stuffs", stuffs2, &std::get<0>(types2), &std::get<1>(types2));
