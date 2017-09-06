@@ -250,6 +250,59 @@ h5rd::Node<Container>::createDataSet(const std::string &name, const h5rd::dimens
 
 template<typename Container>
 template<typename T>
+inline std::unique_ptr<h5rd::VLENDataSet> h5rd::Node<Container>::createVLENDataSet(
+        const std::string &name, const dimensions &chunkSize, const dimensions &maxDims,
+        const FilterConfiguration &filters) {
+    return createVLENDataSet(name, chunkSize, maxDims, STDDataSetType<T>(me()->parentFile()),
+                             NativeDataSetType<T>(me()->parentFile()), filters);
+}
+
+template<typename Container>
+inline std::unique_ptr<h5rd::VLENDataSet>
+h5rd::Node<Container>::createVLENDataSet(const std::string &name, const h5rd::dimensions &chunkSize,
+                                         const h5rd::dimensions &maxDims, const h5rd::DataSetType &memoryType,
+                                         const h5rd::DataSetType &fileType, const FilterConfiguration &filters) {
+    dimension extensionDim;
+    VLENDataSetType vlenMemoryType(memoryType);
+    VLENDataSetType vlenFileType(fileType);
+
+    // validate and find extension dim
+    {
+        auto unlimited_it = std::find(maxDims.begin(), maxDims.end(), UNLIMITED_DIMS);
+        bool containsUnlimited = unlimited_it != maxDims.end();
+        if (!containsUnlimited) {
+            throw std::runtime_error("needs to contain unlimited_dims in some dimension to be extensible");
+        }
+        extensionDim = static_cast<dimension>(std::distance(maxDims.begin(), unlimited_it));
+    }
+    handle_id hid;
+    {
+        // set up empty data set
+        dimensions dims(maxDims.begin(), maxDims.end());
+        dims[extensionDim] = 0;
+        DataSpace fileSpace(me()->parentFile(), dims, maxDims);
+        DataSetCreatePropertyList propertyList(me()->parentFile());
+        propertyList.set_layout_chunked();
+        propertyList.set_chunk(chunkSize);
+        for (auto f : filters) {
+            propertyList.activate_filter(f);
+        }
+
+        hid = H5Dcreate(me()->id(), name.c_str(), vlenFileType.id(),
+                        fileSpace.id(), H5P_DEFAULT, propertyList.id(), H5P_DEFAULT);
+        if (hid < 0) {
+            throw Exception("Error on creating vlen data set " + std::to_string(hid));
+        }
+    }
+    auto ds = std::make_unique<VLENDataSet>(me()->parentFile(), vlenMemoryType, vlenFileType);
+    ds->extensionDim() = extensionDim;
+    ds->_hid = hid;
+    return ds;
+}
+
+
+template<typename Container>
+template<typename T>
 inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array) {
     STDDataSetType<T> stdDST(me()->parentFile());
     NativeDataSetType<T> nDST(me()->parentFile());

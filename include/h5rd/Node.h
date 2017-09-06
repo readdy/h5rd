@@ -76,6 +76,15 @@ public:
                                            const dimensions &maxDims, const DataSetType &memoryType,
                                            const DataSetType &fileType, const FilterConfiguration &filters = {});
 
+    template<typename T>
+    std::unique_ptr<VLENDataSet> createVLENDataSet(const std::string &name, const dimensions &chunkSize,
+                                                   const dimensions &maxDims, const FilterConfiguration &filters = {});
+
+    std::unique_ptr<VLENDataSet> createVLENDataSet(const std::string &name, const dimensions &chunkSize,
+                                                   const dimensions &maxDims, const DataSetType &memoryType,
+                                                   const DataSetType &fileType,
+                                                   const FilterConfiguration &filters = {});
+
 
 private:
 
