@@ -72,6 +72,8 @@ public:
 
     void close() override;
 
+    ParentFileRef ref() const;
+
 protected:
 
     std::shared_ptr<Object> getptr();

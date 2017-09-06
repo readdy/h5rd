@@ -141,3 +141,7 @@ inline void h5rd::File::setUp(std::shared_ptr<File> file) {
 inline std::shared_ptr<h5rd::Object> h5rd::File::getptr() {
     return shared_from_this();
 }
+
+inline h5rd::Object::ParentFileRef h5rd::File::ref() const {
+    return parentFile();
+}
