@@ -85,7 +85,7 @@ inline void VLENDataSet::append(std::vector<std::vector<T>> &data) {
 }
 
 template<typename T>
-inline void VLENDataSet::append(const dimensions &dims, const std::vector<T> *const data) {
+inline void VLENDataSet::append(const dimensions &dims, std::vector<T> *const data) {
     /*{
         std::stringstream result;
         std::copy(dims.begin(), dims.end(), std::ostream_iterator<int>(result, ", "));

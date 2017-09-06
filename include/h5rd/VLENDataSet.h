@@ -45,7 +45,7 @@ public:
     void append(std::vector<std::vector<T>> &data);
 
     template<typename T>
-    void append(const dimensions &dims, const std::vector<T> *data);
+    void append(const dimensions &dims, std::vector<T> *data);
 
     ~VLENDataSet() override;
 
