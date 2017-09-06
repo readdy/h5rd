@@ -35,6 +35,9 @@
 #include "../File.h"
 
 namespace {
+
+static std::shared_ptr<h5rd::Object> empty {nullptr};
+
 inline int convertFlag(const h5rd::File::Flag &flag) {
     switch (flag) {
         case h5rd::File::Flag::READ_ONLY:
@@ -56,31 +59,8 @@ inline int convertFlag(const h5rd::File::Flag &flag) {
 inline h5rd::File::File(const std::string &path, const Action &action, const Flag &flag)
         : File(path, action, Flags{flag}){}
 
-inline h5rd::File::File(const std::string &path, const Action &action, const Flags &flags) : Object(this), path(path) {
-    unsigned flag = 0x0000u;
-    for (const auto &f : flags) {
-        flag = flag | convertFlag(f);
-    }
-    FileAccessPropertyList fapl(_parentFile);
-    fapl.set_close_degree_strong();
-    fapl.set_use_latest_libver();
-    handle_id val = 0;
-    switch (action) {
-        case Action::CREATE: {
-            val = H5Fcreate(path.c_str(), flag, H5P_DEFAULT, fapl.id());
-            break;
-        }
-        case Action::OPEN: {
-            val = H5Fopen(path.c_str(), flag, fapl.id());
-            break;
-        }
-    }
-    if(val < 0){
-        throw Exception("Failed on opening/creating file " + path);
-    }
-    _hid = val;
-    _parentFile = this;
-}
+inline h5rd::File::File(const std::string &path, const Action &action, const Flags &flags)
+        : Object(), path(path), action(action), flags(flags) {}
 
 inline void h5rd::File::flush() {
     if (H5Fflush(_hid, H5F_SCOPE_LOCAL) < 0) {
@@ -97,10 +77,67 @@ inline h5rd::File::~File() {
 }
 
 inline void h5rd::File::close() {
-    if(!closed() && valid()) {
+    if(!closed() && _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0) {
         if(H5Fclose(id()) < 0) {
             throw Exception("Error on closing HDF5 file \"" + path + "\"");
         }
         _closed = true;
     }
+}
+
+inline std::shared_ptr<h5rd::File> h5rd::File::open(const std::string &path, const h5rd::File::Flag &flag) {
+    auto f = std::shared_ptr<h5rd::File>(new File(path, h5rd::File::Action::OPEN, flag));
+    f->_parentFile = f->getptr();
+    setUp(f);
+    return f;
+}
+
+inline std::shared_ptr<h5rd::File> h5rd::File::open(const std::string &path, const h5rd::File::Flags &flags) {
+    auto f = std::shared_ptr<h5rd::File>(new File(path, h5rd::File::Action::OPEN, flags));
+    f->_parentFile = f->getptr();
+    setUp(f);
+    return f;
+}
+
+inline std::shared_ptr<h5rd::File> h5rd::File::create(const std::string &path, const h5rd::File::Flag &flag) {
+    auto f = std::shared_ptr<h5rd::File>(new File(path, h5rd::File::Action::CREATE, flag));
+    f->_parentFile = f->getptr();
+    setUp(f);
+    return f;
+}
+
+inline std::shared_ptr<h5rd::File> h5rd::File::create(const std::string &path, const h5rd::File::Flags &flags) {
+    auto f = std::shared_ptr<h5rd::File>(new File(path, h5rd::File::Action::CREATE, flags));
+    f->_parentFile = f->getptr();
+    setUp(f);
+    return f;
+}
+
+inline void h5rd::File::setUp(std::shared_ptr<File> file) {
+    unsigned flag = 0x0000u;
+    for (const auto &f : file->flags) {
+        flag = flag | convertFlag(f);
+    }
+    FileAccessPropertyList fapl(file);
+    fapl.set_close_degree_strong();
+    fapl.set_use_latest_libver();
+    handle_id val = 0;
+    switch (file->action) {
+        case Action::CREATE: {
+            val = H5Fcreate(file->path.c_str(), flag, H5P_DEFAULT, fapl.id());
+            break;
+        }
+        case Action::OPEN: {
+            val = H5Fopen(file->path.c_str(), flag, fapl.id());
+            break;
+        }
+    }
+    if(val < 0){
+        throw Exception("Failed on opening/creating file " + file->path);
+    }
+    file->_hid = val;
+}
+
+inline std::shared_ptr<h5rd::Object> h5rd::File::getptr() {
+    return shared_from_this();
 }

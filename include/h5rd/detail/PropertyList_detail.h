@@ -56,20 +56,20 @@ inline void PropertyList::close() {
     }
 }
 
-inline PropertyList::PropertyList(handle_id cls_id, Object *parentFile) : super(parentFile) {
+inline PropertyList::PropertyList(handle_id cls_id, ParentFileRef parentFile) : super(parentFile) {
     _hid = H5Pcreate(cls_id);
     if (!valid()) {
         throw Exception("Failed to create property list!");
     }
 }
 
-inline LinkCreatePropertyList::LinkCreatePropertyList(Object *parentFile) : PropertyList(H5P_LINK_CREATE, parentFile) {}
+inline LinkCreatePropertyList::LinkCreatePropertyList(ParentFileRef parentFile) : PropertyList(H5P_LINK_CREATE, parentFile) {}
 
 inline void LinkCreatePropertyList::set_create_intermediate_group() {
     H5Pset_create_intermediate_group(id(), 1);
 }
 
-inline FileAccessPropertyList::FileAccessPropertyList(Object *parentFile) : PropertyList(H5P_FILE_ACCESS, parentFile) {}
+inline FileAccessPropertyList::FileAccessPropertyList(ParentFileRef parentFile) : PropertyList(H5P_FILE_ACCESS, parentFile) {}
 
 inline void FileAccessPropertyList::set_close_degree_weak()  {
     H5Pset_fclose_degree(id(), H5F_CLOSE_WEAK);
@@ -91,7 +91,7 @@ inline void FileAccessPropertyList::set_use_latest_libver() {
     H5Pset_libver_bounds(id(), H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 }
 
-inline DataSetCreatePropertyList::DataSetCreatePropertyList(Object *parentFile) : PropertyList(H5P_DATASET_CREATE, parentFile) {}
+inline DataSetCreatePropertyList::DataSetCreatePropertyList(ParentFileRef parentFile) : PropertyList(H5P_DATASET_CREATE, parentFile) {}
 
 inline void DataSetCreatePropertyList::set_layout_compact() {
     H5Pset_layout(id(), H5D_COMPACT);

@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <memory>
 #include "common.h"
 #include "Exception.h"
 
@@ -40,32 +41,21 @@ namespace h5rd {
 class Object {
 public:
 
-    explicit Object(Object *parentFile) : _parentFile(parentFile) {}
+    using ParentFileRef = std::weak_ptr<Object>;
 
-    bool valid() const {
-        return _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
-    }
+    Object() = default;
 
-    handle_id id() const {
-        return _hid;
-    }
+    bool valid() const;
+
+    handle_id id() const;
 
     Object(const Object &) = delete;
 
     Object &operator=(const Object &) = delete;
 
-    Object(Object &&rhs) noexcept
-            : _hid(std::move(rhs._hid)), _parentFile(std::move(rhs._parentFile)), _closed(std::move(rhs._closed)) {
-        rhs._closed = true;
-    }
+    Object(Object &&rhs) noexcept;
 
-    Object &operator=(Object &&rhs) noexcept {
-        _hid = std::move(rhs._hid);
-        _parentFile = std::move(rhs._parentFile);
-        _closed = std::move(rhs._closed);
-        rhs._closed = true;
-        return *this;
-    }
+    Object &operator=(Object &&rhs) noexcept;
 
     virtual ~Object() = default;
 
@@ -73,15 +63,20 @@ public:
 
     bool closed() const;
 
-    Object *parentFile() const;
+    const ParentFileRef &parentFile() const;
 
 protected:
     handle_id _hid{H5I_INVALID_HID};
-    Object *_parentFile{nullptr};
+    ParentFileRef _parentFile;
     bool _closed{false};
 
 private:
     template<typename Container> friend class Node;
+};
+
+class SubObject : public Object {
+public:
+    explicit SubObject(ParentFileRef parentFile);
 };
 
 }

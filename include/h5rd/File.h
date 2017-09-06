@@ -37,7 +37,7 @@
 
 namespace h5rd {
 
-class File : public Object, public Node<File> {
+class File : public Object, public Node<File>, public std::enable_shared_from_this<Object> {
 public:
 
     enum class Action {
@@ -50,9 +50,11 @@ public:
 
     using Flags = std::vector<Flag>;
 
-    File(const std::string &path, const Action &action, const Flags &flags);
+    static std::shared_ptr<File> open(const std::string &path, const Flag &flag);
+    static std::shared_ptr<File> open(const std::string &path, const Flags &flags);
 
-    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
+    static std::shared_ptr<File> create(const std::string &path, const Flag &flag);
+    static std::shared_ptr<File> create(const std::string &path, const Flags &flags);
 
     File(const File &) = delete;
 
@@ -68,8 +70,19 @@ public:
 
     void close() override;
 
-private:
+protected:
+
+    std::shared_ptr<Object> getptr();
+
+    static void setUp(std::shared_ptr<File> file);
+
+    File(const std::string &path, const Action &action, const Flags &flags);
+
+    File(const std::string &path, const Action &action, const Flag &flag = Flag::OVERWRITE);
+
     std::string path;
+    Action action;
+    Flags flags;
 };
 
 }

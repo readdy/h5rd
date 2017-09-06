@@ -68,9 +68,12 @@ inline h5rd::dimensions h5rd::DataSpace::maxDims() const {
 }
 
 inline void h5rd::DataSpace::close() {
-    if(_parentFile && !_parentFile->closed() && valid()) {
-        if(H5Sclose(id()) < 0) {
-            throw Exception("Error on closing HDF5 data space");
+    auto pf = _parentFile.lock();
+    if(pf) {
+        if(!pf->closed() && valid()) {
+            if(H5Sclose(id()) < 0) {
+                throw Exception("Error on closing HDF5 data space");
+            }
         }
     }
 }
@@ -83,7 +86,7 @@ inline h5rd::DataSpace::~DataSpace() {
     }
 }
 
-inline h5rd::DataSpace::DataSpace(Object *parentFile, const dimensions &dims, const dimensions &maxDims) : Object(parentFile) {
+inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, const dimensions &dims, const dimensions &maxDims) : SubObject(parentFile) {
     if (maxDims.empty()) {
         _hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
     } else {
@@ -94,9 +97,8 @@ inline h5rd::DataSpace::DataSpace(Object *parentFile, const dimensions &dims, co
     }
 }
 
-inline h5rd::DataSpace::DataSpace() : Object(nullptr) {}
+// inline h5rd::DataSpace::DataSpace() : Object(nullptr) {}
 
-inline h5rd::DataSpace::DataSpace(h5rd::Object *parentFile, h5rd::handle_id handle)
-        : Object(parentFile){
+inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, h5rd::handle_id handle) : SubObject(parentFile) {
     _hid = handle;
 }

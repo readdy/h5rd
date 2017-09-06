@@ -36,9 +36,9 @@
 
 namespace h5rd {
 
-class Group : public Object, public Node<Group> {
+class Group : public SubObject, public Node<Group> {
 public:
-    explicit Group(std::string path, Object *parentFile);
+    explicit Group(std::string path, ParentFileRef parentFile);
 
     Group(const Group &) = delete;
 

@@ -36,14 +36,14 @@
 
 namespace h5rd {
 
-class DataSpace : public Object {
+class DataSpace : public SubObject {
 public:
 
-    DataSpace();
+    // DataSpace();
 
-    DataSpace(Object *parentFile, handle_id handle);
+    DataSpace(ParentFileRef parentFile, handle_id handle);
 
-    DataSpace(Object *parentFile, const dimensions &dims, const dimensions &maxDims = {});
+    DataSpace(ParentFileRef parentFile, const dimensions &dims, const dimensions &maxDims = {});
 
     ~DataSpace() override;
 

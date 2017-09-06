@@ -34,10 +34,39 @@
 
 #include "../Object.h"
 
-inline h5rd::Object* h5rd::Object::parentFile() const {
+inline const h5rd::Object::ParentFileRef &h5rd::Object::parentFile() const {
     return _parentFile;
 }
 
 inline bool h5rd::Object::closed() const {
     return _closed;
+}
+
+inline bool h5rd::Object::valid() const {
+    auto pf = _parentFile.lock();
+    if(pf) {
+        return !pf->closed() && _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0;
+    }
+    return false;
+}
+
+inline h5rd::handle_id h5rd::Object::id() const {
+    return _hid;
+}
+
+inline h5rd::Object::Object(h5rd::Object &&rhs) noexcept
+        : _hid(std::move(rhs._hid)), _parentFile(std::move(rhs._parentFile)), _closed(std::move(rhs._closed)) {
+    rhs._closed = true;
+}
+
+inline h5rd::Object &h5rd::Object::operator=(h5rd::Object &&rhs) noexcept {
+    _hid = std::move(rhs._hid);
+    _parentFile = std::move(rhs._parentFile);
+    _closed = std::move(rhs._closed);
+    rhs._closed = true;
+    return *this;
+}
+
+inline h5rd::SubObject::SubObject(ParentFileRef parentFile) : Object() {
+    _parentFile = parentFile;
 }

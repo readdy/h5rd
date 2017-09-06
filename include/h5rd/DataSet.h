@@ -38,9 +38,9 @@
 
 namespace h5rd {
 
-class DataSet : public Object {
+class DataSet : public SubObject {
 public:
-    explicit DataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType);
+    explicit DataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType);
 
     DataSet(const DataSet &) = delete;
 

@@ -36,10 +36,10 @@
 
 namespace h5rd {
 
-class PropertyList : public Object {
-    using super = Object;
+class PropertyList : public SubObject {
+    using super = SubObject;
 public:
-    explicit PropertyList(handle_id cls_id, Object *parentFile);
+    explicit PropertyList(handle_id cls_id, ParentFileRef parentFile);
 
     PropertyList(const PropertyList &) = delete;
 
@@ -56,14 +56,14 @@ public:
 
 class LinkCreatePropertyList : public PropertyList {
 public:
-    explicit LinkCreatePropertyList(Object *parentFile);
+    explicit LinkCreatePropertyList(ParentFileRef parentFile);
 
     void set_create_intermediate_group();
 };
 
 class FileAccessPropertyList : public PropertyList {
 public:
-    explicit FileAccessPropertyList(Object *parentFile);
+    explicit FileAccessPropertyList(ParentFileRef parentFile);
 
     void set_close_degree_weak();
 
@@ -78,7 +78,7 @@ public:
 
 class DataSetCreatePropertyList : public PropertyList {
 public:
-    explicit DataSetCreatePropertyList(Object *parentFile);
+    explicit DataSetCreatePropertyList(ParentFileRef parentFile);
 
     void set_layout_compact();
 

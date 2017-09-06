@@ -35,9 +35,9 @@
 #include "Object.h"
 
 namespace h5rd {
-class DataSetType : public Object {
+class DataSetType : public SubObject {
 public:
-    explicit DataSetType(handle_id hid, Object *parentFile);
+    explicit DataSetType(handle_id hid, ParentFileRef parentFile);
 
     DataSetType(const DataSetType &rhs);
 
@@ -56,7 +56,7 @@ public:
 template<typename T>
 class NativeDataSetType : public DataSetType {
 public:
-    explicit NativeDataSetType(Object* parentFile);
+    explicit NativeDataSetType(ParentFileRef parentFile);
 
     using type = T;
 };
@@ -66,7 +66,7 @@ class NativeArrayDataSetType : public DataSetType {
 public:
     using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
 
-    explicit NativeArrayDataSetType(Object* parentFile);
+    explicit NativeArrayDataSetType(ParentFileRef parentFile);
 
     constexpr static unsigned int size = len;
 private:
@@ -78,7 +78,7 @@ class NativeStdArrayDataSetType : public DataSetType {
 public:
     using type = typename T::value_type;
 
-    NativeStdArrayDataSetType(Object* parentFile);
+    NativeStdArrayDataSetType(ParentFileRef parentFile);
 
     constexpr static std::size_t size = std::tuple_size<T>::value;
 private:
@@ -88,7 +88,7 @@ private:
 template<typename T>
 class STDDataSetType : public DataSetType {
 public:
-    explicit STDDataSetType(Object* parentFile);
+    explicit STDDataSetType(ParentFileRef parentFile);
 
     using type = T;
 };
@@ -98,7 +98,7 @@ class STDArrayDataSetType : public DataSetType {
 public:
     using type = typename std::remove_pointer<typename std::decay<T>::type>::type;
 
-    explicit STDArrayDataSetType(Object* parentFile);
+    explicit STDArrayDataSetType(ParentFileRef parentFile);
 
     constexpr static unsigned int size = len;
 private:
@@ -107,7 +107,7 @@ private:
 
 class NativeCompoundType : public DataSetType {
 public:
-    explicit NativeCompoundType(handle_id tid, Object* parentFile, std::vector<DataSetType> &&insertTypes);
+    explicit NativeCompoundType(handle_id tid, ParentFileRef parentFile, std::vector<DataSetType> &&insertTypes);
 
 private:
     std::vector<DataSetType> insertedTypes;
@@ -120,7 +120,7 @@ public:
 
 class NativeCompoundTypeBuilder {
 public:
-    explicit NativeCompoundTypeBuilder(std::size_t size, Object* parentFile);
+    explicit NativeCompoundTypeBuilder(std::size_t size, Object::ParentFileRef parentFile);
 
     NativeCompoundTypeBuilder &insert(const std::string &name, std::size_t offset, DataSetType &&type);
 
@@ -139,7 +139,7 @@ public:
 
 private:
     handle_id tid;
-    Object *_parentFile;
+    Object::ParentFileRef _parentFile;
     std::vector<DataSetType> insertedTypes;
 };
 

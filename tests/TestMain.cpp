@@ -39,10 +39,10 @@ TEST(TestH5ReaDDy, Sanity) {
     using namespace h5rd;
 
     {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f.exists("/") << std::endl;
-        auto g = f.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f.exists("/foo/bar") << std::endl;
+        auto f = File::create("test.h5", File::Flag::OVERWRITE);
+        std::cout << "/ exists: " << f->exists("/") << std::endl;
+        auto g = f->createGroup("/foo/bar");
+        std::cout << "foo/bar exists: " << f->exists("/foo/bar") << std::endl;
 
         g.write("miau", "blubs");
         std::vector<int> zahlen{1, 2, 3, 4, 5, 6, 7};
@@ -54,12 +54,12 @@ TEST(TestH5ReaDDy, Sanity) {
         }
         std::cout << std::endl;
 
-        f.close();
+        f->close();
 
-        File f2("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        std::cout << "/ exists: " << f2.exists("/") << std::endl;
-        auto g2 = f2.createGroup("/foo/bar");
-        std::cout << "foo/bar exists: " << f2.exists("/foo/bar") << std::endl;
+        auto f2 = File::create("test.h5", File::Flag::OVERWRITE);
+        std::cout << "/ exists: " << f2->exists("/") << std::endl;
+        auto g2 = f2->createGroup("/foo/bar");
+        std::cout << "foo/bar exists: " << f2->exists("/foo/bar") << std::endl;
     }
 }
 
@@ -69,7 +69,7 @@ struct Stuff {
     std::array<short, 3> xyz;
 };
 
-auto getCompoundTypes = [](h5rd::Object *parentFile) {
+auto getCompoundTypes = [](h5rd::Object::ParentFileRef parentFile) {
     using namespace h5rd;
     NativeCompoundType stuffType = NativeCompoundTypeBuilder(sizeof(Stuff), parentFile)
             .insert<decltype(std::declval<Stuff>().a)>("a", offsetof(Stuff, a))
@@ -83,24 +83,24 @@ auto getCompoundTypes = [](h5rd::Object *parentFile) {
 TEST(TestH5ReaDDy, ReadWriteCompoundType) {
     using namespace h5rd;
     {
-        File f("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-        auto group = f.createGroup("/my/compound/group");
+        auto f = File::create("test.h5", File::Flag::OVERWRITE);
+        auto group = f->createGroup("/my/compound/group");
 
         Stuff s1{3, 5.f, {{1, 1, 1}}};
         Stuff s2{4, 5.f, {{2, 2, 2}}};
         Stuff s3{6, 7.f, {{3, 3, 3}}};
         std::vector<Stuff> stuffs{s1, s2, s3};
 
-        auto types = getCompoundTypes(f.parentFile());
+        auto types = getCompoundTypes(f->parentFile());
 
         auto ds = group.createDataSet("stuffs", {3}, {UNLIMITED_DIMS}, std::get<0>(types), std::get<1>(types));
         ds->append({stuffs.size()}, stuffs.data());
 
     }
     {
-        File f("test.h5", File::Action::OPEN, File::Flag::READ_ONLY);
-        auto group = f.getSubgroup("/my/compound/group");
-        auto types = getCompoundTypes(f.parentFile());
+        auto f = File::open("test.h5", File::Flag::READ_ONLY);
+        auto group = f->getSubgroup("/my/compound/group");
+        auto types = getCompoundTypes(f->parentFile());
         std::vector<Stuff> stuffs;
         group.read("stuffs", stuffs, &std::get<0>(types), &std::get<1>(types));
 
@@ -115,7 +115,7 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
 
 TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
     using namespace h5rd;
-    std::unique_ptr<File> f = std::make_unique<File>("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
+    auto f = File::create("test.h5", File::Flag::OVERWRITE);
     auto group = f->createGroup("/my/compound/group");
 
     std::vector<Stuff> stuffs;
@@ -142,9 +142,9 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
     }
 
     {
-        File f2("test.h5", File::Action::OPEN, File::Flag::READ_ONLY);
-        auto group2 = f2.getSubgroup("/my/compound/group");
-        auto types2 = getCompoundTypes(f2.parentFile());
+        auto f2 = File::open("test.h5", File::Flag::READ_ONLY);
+        auto group2 = f2->getSubgroup("/my/compound/group");
+        auto types2 = getCompoundTypes(f2->parentFile());
         std::vector<Stuff> stuffs2;
         group2.read("stuffs", stuffs2, &std::get<0>(types2), &std::get<1>(types2));
 
@@ -161,12 +161,12 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
         }
     }
 
-    File f3("test.h5", File::Action::CREATE, File::Flag::OVERWRITE);
-    auto gtest123 = f3.createGroup("/test123");
+    auto f3 = File::create("test.h5", File::Flag::OVERWRITE);
+    auto gtest123 = f3->createGroup("/test123");
 
     gtest123.write("hier", "stehtwas");
 
-    auto types123 = getCompoundTypes(f3.parentFile());
+    auto types123 = getCompoundTypes(f3->parentFile());
     auto ds213 = gtest123.createDataSet("stuffs", {3}, {UNLIMITED_DIMS}, std::get<0>(types123), std::get<1>(types123));
     ds.reset();
     ds213->append({stuffs.size()}, stuffs.data());

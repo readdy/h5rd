@@ -48,13 +48,16 @@ inline h5rd::DataSet::~DataSet() {
 }
 
 inline void h5rd::DataSet::close() {
-    if(_parentFile && !_parentFile->closed() && valid() && H5Dclose(id()) < 0) {
-        throw Exception("Error on closing HDF5 data set");
+    auto pf = _parentFile.lock();
+    if(pf) {
+        if(!pf->closed() && valid() && H5Dclose(id()) < 0) {
+            throw Exception("Error on closing HDF5 data set");
+        }
     }
 }
 
-inline h5rd::DataSet::DataSet(Object *parentFile, const DataSetType &memoryType, const DataSetType &fileType)
-        : Object(parentFile), _memoryType(memoryType), _fileType(fileType)  {}
+inline h5rd::DataSet::DataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType)
+        : SubObject(parentFile), _memoryType(memoryType), _fileType(fileType)  {}
 
 inline h5rd::dimension &h5rd::DataSet::extensionDim() {
     return _extensionDim;

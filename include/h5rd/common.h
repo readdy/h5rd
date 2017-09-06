@@ -40,6 +40,7 @@
 
 namespace h5rd {
 
+class File;
 class Filter;
 class Group;
 class DataSet;
