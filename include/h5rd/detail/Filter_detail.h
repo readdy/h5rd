@@ -34,6 +34,7 @@
 
 #include <H5Zpublic.h>
 
+#include "../File.h"
 #include "../Filter.h"
 #include "../PropertyList.h"
 
