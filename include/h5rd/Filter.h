@@ -32,8 +32,6 @@
 
 #pragma once
 
-#include <memory>
-
 #include "common.h"
 
 namespace h5rd {

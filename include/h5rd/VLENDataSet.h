@@ -32,7 +32,6 @@
 
 #pragma once
 
-#include <memory>
 #include "Object.h"
 #include "DataSetType.h"
 

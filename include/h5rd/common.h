@@ -33,9 +33,11 @@
 #pragma once
 
 #include <array>
+#include <vector>
+#include <memory>
+
 #include <H5Gpublic.h>
 #include <H5Spublic.h>
-#include <vector>
 #include <hdf5.h>
 
 namespace h5rd {
