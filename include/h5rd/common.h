@@ -41,17 +41,26 @@
 namespace h5rd {
 
 class File;
+
 class Filter;
+
 class Group;
+
 class DataSet;
+
 class VLENDataSet;
+
 template<typename T>
 class STDDataSetType;
+
 template<typename T>
 class NativeDataSetType;
+
 template<typename Container>
 class Node;
+
 class DataSpace;
+
 class DataSetType;
 
 
@@ -65,48 +74,68 @@ namespace util {
 
 inline bool groupExists(hid_t hid, const std::string &name) {
     H5E_BEGIN_TRY
-    {
-        hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
-        if (hid > 0) {
-            H5Gclose(hid);
+        {
+            hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
+            if (hid > 0) {
+                H5Gclose(hid);
+            }
         }
-    }
     H5E_END_TRY
     return (hid > 0);
 }
 
 template<typename T>
-struct n_dims { static constexpr std::size_t value = 0; };
+struct n_dims {
+    static constexpr std::size_t value = 0;
+};
 
 template<typename T>
-struct n_dims<std::vector<T>> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+struct n_dims<std::vector<T>> {
+    static constexpr std::size_t value = 1 + n_dims<T>::value;
+};
 
 template<typename T>
-struct n_dims<T*> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+struct n_dims<T *> {
+    static constexpr std::size_t value = 1 + n_dims<T>::value;
+};
 
 template<typename T, std::size_t N>
-struct n_dims<T[N]> { static constexpr std::size_t value = 1 + n_dims<T>::value; };
+struct n_dims<T[N]> {
+    static constexpr std::size_t value = 1 + n_dims<T>::value;
+};
 
 template<typename T>
-struct inner_type { using type = T; };
+struct inner_type {
+    using type = T;
+};
 
 template<typename T>
-struct inner_type<std::vector<T>> { using type = typename inner_type<T>::type; };
+struct inner_type<std::vector<T>> {
+    using type = typename inner_type<T>::type;
+};
 
 template<typename T>
-struct inner_type<T*> { using type = typename inner_type<T>::type; };
+struct inner_type<T *> {
+    using type = typename inner_type<T>::type;
+};
 
 template<typename T, std::size_t N>
-struct inner_type<T[N]> { using type = typename inner_type<T>::type; };
+struct inner_type<T[N]> {
+    using type = typename inner_type<T>::type;
+};
 
 template<typename T>
-struct is_std_array : public std::false_type {};
+struct is_std_array : public std::false_type {
+};
 
 template<typename T, std::size_t N>
-struct is_std_array<std::array<T, N>> : public std::true_type {};
+struct is_std_array<std::array<T, N>> : public std::true_type {
+};
 
 template<typename... Ts>
-struct make_void {typedef void type;};
+struct make_void {
+    typedef void type;
+};
 template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
 }

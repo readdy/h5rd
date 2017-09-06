@@ -39,7 +39,7 @@
 
 namespace h5rd {
 
-SZIPFilter::SZIPFilter(SZIPFilter::CodingMethod method, unsigned int pixelsPerBlock)
+inline SZIPFilter::SZIPFilter(SZIPFilter::CodingMethod method, unsigned int pixelsPerBlock)
         : codingMethod(method), pixelsPerBlock(pixelsPerBlock) {}
 
 inline bool SZIPFilter::available() const {

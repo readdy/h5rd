@@ -47,14 +47,14 @@ public:
 
     static std::string h5stack(const std::string &msg) {
         handle_id stackId = H5Eget_current_stack();
-        if(stackId >= 0) {
+        if (stackId >= 0) {
 
-            H5E_walk2_t walker = [](unsigned int n, const H5E_error2_t* desc, void* clientData) -> herr_t {
+            H5E_walk2_t walker = [](unsigned int n, const H5E_error2_t *desc, void *clientData) -> herr_t {
 
-                auto* ss = static_cast<std::stringstream*>(clientData);
+                auto *ss = static_cast<std::stringstream *>(clientData);
 
-                char* major_err = H5Eget_major(desc->maj_num);
-                char* minor_err = H5Eget_minor(desc->min_num);
+                char *major_err = H5Eget_major(desc->maj_num);
+                char *minor_err = H5Eget_minor(desc->min_num);
 
                 std::string err_string("(");
                 err_string += major_err;

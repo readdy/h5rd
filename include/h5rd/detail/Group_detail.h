@@ -47,7 +47,7 @@ inline h5rd::Group::~Group() {
 
 inline void h5rd::Group::close() {
     auto pf = _parentFile.lock();
-    if(pf) {
+    if (pf) {
         if (!pf->closed() && valid() && H5Gclose(id()) < 0) {
             throw Exception("Error on closing HDF5 group");
         }

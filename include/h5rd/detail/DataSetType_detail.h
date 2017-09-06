@@ -42,25 +42,25 @@ inline h5rd::DataSetType::DataSetType(handle_id hid, ParentFileRef parentFile) :
 inline h5rd::DataSetType::DataSetType(const DataSetType &rhs) : SubObject(rhs._parentFile) {
     _hid = rhs._hid;
     _closed = rhs._closed;
-    if(/*_parentFile && !_parentFile->closed() && */valid()) {
-        if(H5Iinc_ref(_hid) < 0) {
+    if (/*_parentFile && !_parentFile->closed() && */valid()) {
+        if (H5Iinc_ref(_hid) < 0) {
             throw Exception("Error on increase HDF5 reference counter for data type");
         }
     }
 }
 
 inline h5rd::DataSetType &h5rd::DataSetType::operator=(const h5rd::DataSetType &rhs) {
-    if(this != &rhs) {
-        if(_hid != H5I_INVALID_HID) {
-            if(H5Idec_ref(_hid)<0) {
+    if (this != &rhs) {
+        if (_hid != H5I_INVALID_HID) {
+            if (H5Idec_ref(_hid) < 0) {
                 throw Exception("Error in decrease of HDF5 reference counter for data type, copy assign");
             }
         }
         _hid = rhs._hid;
         _closed = rhs._closed;
         _parentFile = rhs._parentFile;
-        if(/*_parentFile && !_parentFile->closed() && */valid()) {
-            if(H5Iinc_ref(_hid) < 0) {
+        if (/*_parentFile && !_parentFile->closed() && */valid()) {
+            if (H5Iinc_ref(_hid) < 0) {
                 throw Exception("Error in increase HDF5 reference counter for data type, copy assign");
             }
         }
@@ -86,11 +86,11 @@ inline void h5rd::DataSetType::close() {
 
 namespace h5rd {
 inline VLENDataSetType::VLENDataSetType(const DataSetType &other) : DataSetType(H5Tvlen_create(other.id()),
-                                                                         other.parentFile()) {}
+                                                                                other.parentFile()) {}
 
 template<>
 inline STDDataSetType<unsigned char>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I8LE),
-                                                                                       parentFile) {}
+                                                                                             parentFile) {}
 
 template<>
 inline
@@ -98,7 +98,7 @@ STDDataSetType<short>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5
 
 template<>
 inline STDDataSetType<unsigned short>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U16LE),
-                                                                                        parentFile) {}
+                                                                                              parentFile) {}
 
 template<>
 inline
@@ -106,7 +106,7 @@ STDDataSetType<int>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tc
 
 template<>
 inline STDDataSetType<unsigned int>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U32LE),
-                                                                                      parentFile) {}
+                                                                                            parentFile) {}
 
 template<>
 inline
@@ -114,7 +114,7 @@ STDDataSetType<long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5T
 
 template<>
 inline STDDataSetType<unsigned long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U64LE),
-                                                                                       parentFile) {}
+                                                                                             parentFile) {}
 
 template<>
 inline
@@ -123,7 +123,7 @@ STDDataSetType<long long>::STDDataSetType(ParentFileRef parentFile) : DataSetTyp
 template<>
 inline
 STDDataSetType<unsigned long long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U64LE),
-                                                                                     parentFile) {}
+                                                                                           parentFile) {}
 
 template<>
 inline
@@ -140,39 +140,39 @@ STDDataSetType<std::string>::STDDataSetType(ParentFileRef parentFile) : DataSetT
 template<>
 inline
 NativeDataSetType<unsigned char>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_UCHAR),
-                                                                                      parentFile) {}
+                                                                                            parentFile) {}
 
 template<>
 inline NativeDataSetType<short>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_SHORT),
-                                                                                     parentFile) {}
+                                                                                           parentFile) {}
 
 template<>
 inline
 NativeDataSetType<unsigned short>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_USHORT),
-                                                                                       parentFile) {}
+                                                                                             parentFile) {}
 
 template<>
 inline NativeDataSetType<int>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_INT),
-                                                                                   parentFile) {}
+                                                                                         parentFile) {}
 
 template<>
 inline
 NativeDataSetType<unsigned int>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_UINT),
-                                                                                     parentFile) {}
+                                                                                           parentFile) {}
 
 template<>
 inline NativeDataSetType<long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_LONG),
-                                                                                    parentFile) {}
+                                                                                          parentFile) {}
 
 template<>
 inline
 NativeDataSetType<unsigned long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_ULONG),
-                                                                                      parentFile) {}
+                                                                                            parentFile) {}
 
 template<>
 inline
 NativeDataSetType<long long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_LLONG),
-                                                                                  parentFile) {}
+                                                                                        parentFile) {}
 
 template<>
 inline NativeDataSetType<unsigned long long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(
@@ -180,30 +180,30 @@ inline NativeDataSetType<unsigned long long>::NativeDataSetType(ParentFileRef pa
 
 template<>
 inline NativeDataSetType<float>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_FLOAT),
-                                                                                     parentFile) {}
+                                                                                           parentFile) {}
 
 template<>
 inline NativeDataSetType<double>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_DOUBLE),
-                                                                                      parentFile) {}
+                                                                                            parentFile) {}
 
 template<>
 inline NativeDataSetType<bool>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_HBOOL),
-                                                                                    parentFile) {}
+                                                                                          parentFile) {}
 
 template<>
 inline NativeDataSetType<std::string>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_C_S1),
-                                                                                           parentFile) {}
+                                                                                                 parentFile) {}
 
 template<typename T, typename enable>
 inline NativeStdArrayDataSetType<T, enable>::NativeStdArrayDataSetType(ParentFileRef parentFile)
-        : DataSetType(-1, parentFile), nativeType(NativeDataSetType<type> {parentFile}) {
+        : DataSetType(-1, parentFile), nativeType(NativeDataSetType < type > {parentFile}) {
     hsize_t dim[1] = {size};
     _hid = H5Tarray_create(nativeType.id(), 1, dim);
 }
 
 template<typename T, unsigned int len>
 inline NativeArrayDataSetType<T, len>::NativeArrayDataSetType(ParentFileRef parentFile)
-        : DataSetType(-1, parentFile), nativeType(NativeDataSetType<type> {parentFile}) {
+        : DataSetType(-1, parentFile), nativeType(NativeDataSetType < type > {parentFile}) {
     hsize_t dim[1] = {len};
     _hid = H5Tarray_create(nativeType.id(), 1, dim);
 }
@@ -215,7 +215,8 @@ inline STDArrayDataSetType<T, len>::STDArrayDataSetType(ParentFileRef parentFile
     _hid = H5Tarray_create(stdType.id(), 1, dim);
 }
 
-inline NativeCompoundType::NativeCompoundType(handle_id tid, ParentFileRef parentFile, std::vector<DataSetType> &&insertTypes)
+inline NativeCompoundType::NativeCompoundType(handle_id tid, ParentFileRef parentFile,
+                                              std::vector<DataSetType> &&insertTypes)
         : DataSetType(tid, parentFile), insertedTypes(std::move(insertTypes)) {}
 
 inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size, Object::ParentFileRef parentFile) {

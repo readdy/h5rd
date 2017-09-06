@@ -51,9 +51,11 @@ public:
     using Flags = std::vector<Flag>;
 
     static std::shared_ptr<File> open(const std::string &path, const Flag &flag);
+
     static std::shared_ptr<File> open(const std::string &path, const Flags &flags);
 
     static std::shared_ptr<File> create(const std::string &path, const Flag &flag);
+
     static std::shared_ptr<File> create(const std::string &path, const Flags &flags);
 
     File(const File &) = delete;

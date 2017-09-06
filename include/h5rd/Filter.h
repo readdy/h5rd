@@ -94,7 +94,9 @@ public:
 class ScaleOffsetFilter : public Filter {
 public:
 
-    enum ScaleType {FloatingPointVariableMinBits, FloatingPointFixedMinBits, IntegerType};
+    enum ScaleType {
+        FloatingPointVariableMinBits, FloatingPointFixedMinBits, IntegerType
+    };
 
     ScaleOffsetFilter(ScaleType scaleType, int scaleFactor);
 

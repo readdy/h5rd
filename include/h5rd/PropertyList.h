@@ -88,7 +88,7 @@ public:
 
     void set_chunk(const dimensions &chunk_dims);
 
-    void activate_filter(Filter* filter);
+    void activate_filter(Filter *filter);
 
 };
 

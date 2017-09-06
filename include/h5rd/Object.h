@@ -71,7 +71,8 @@ protected:
     bool _closed{false};
 
 private:
-    template<typename Container> friend class Node;
+    template<typename Container> friend
+    class Node;
 };
 
 class SubObject : public Object {

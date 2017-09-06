@@ -54,7 +54,7 @@ public:
     void append(std::vector<T> &data);
 
     template<typename T>
-    void append(const dimensions &dims, const T* data);
+    void append(const dimensions &dims, const T *data);
 
     ~DataSet() override;
 
@@ -70,7 +70,7 @@ public:
 
 private:
     dimension _extensionDim;
-    std::unique_ptr<DataSpace> _memorySpace {nullptr};
+    std::unique_ptr<DataSpace> _memorySpace{nullptr};
     DataSetType _memoryType;
     DataSetType _fileType;
 };

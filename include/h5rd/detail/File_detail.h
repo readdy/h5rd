@@ -36,8 +36,6 @@
 
 namespace {
 
-static std::shared_ptr<h5rd::Object> empty {nullptr};
-
 inline int convertFlag(const h5rd::File::Flag &flag) {
     switch (flag) {
         case h5rd::File::Flag::READ_ONLY:
@@ -57,7 +55,7 @@ inline int convertFlag(const h5rd::File::Flag &flag) {
 }
 
 inline h5rd::File::File(const std::string &path, const Action &action, const Flag &flag)
-        : File(path, action, Flags{flag}){}
+        : File(path, action, Flags{flag}) {}
 
 inline h5rd::File::File(const std::string &path, const Action &action, const Flags &flags)
         : Object(), path(path), action(action), flags(flags) {}
@@ -71,14 +69,14 @@ inline void h5rd::File::flush() {
 inline h5rd::File::~File() {
     try {
         close();
-    } catch(const Exception &e) {
+    } catch (const Exception &e) {
         std::cerr << "Unable to close hdf5 file: " << e.what() << std::endl;
     }
 }
 
 inline void h5rd::File::close() {
-    if(!closed() && _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0) {
-        if(H5Fclose(id()) < 0) {
+    if (!closed() && _hid != H5I_INVALID_HID && H5Iis_valid(_hid) > 0) {
+        if (H5Fclose(id()) < 0) {
             throw Exception("Error on closing HDF5 file \"" + path + "\"");
         }
         _closed = true;
@@ -132,7 +130,7 @@ inline void h5rd::File::setUp(std::shared_ptr<File> file) {
             break;
         }
     }
-    if(val < 0){
+    if (val < 0) {
         throw Exception("Failed on opening/creating file " + file->path);
     }
     file->_hid = val;

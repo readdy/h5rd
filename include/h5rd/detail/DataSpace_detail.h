@@ -44,7 +44,7 @@ inline std::size_t h5rd::DataSpace::ndim() const {
 }
 
 inline h5rd::dimensions h5rd::DataSpace::dims() const {
-    if(!valid()) {
+    if (!valid()) {
         throw Exception("Tried requesting dims from invalid data space");
     }
     dimensions result;
@@ -56,7 +56,7 @@ inline h5rd::dimensions h5rd::DataSpace::dims() const {
 }
 
 inline h5rd::dimensions h5rd::DataSpace::maxDims() const {
-    if(!valid()) {
+    if (!valid()) {
         throw Exception("Tried requesting maxDims from invalid data space");
     }
     dimensions result;
@@ -69,9 +69,9 @@ inline h5rd::dimensions h5rd::DataSpace::maxDims() const {
 
 inline void h5rd::DataSpace::close() {
     auto pf = _parentFile.lock();
-    if(pf) {
-        if(!pf->closed() && valid()) {
-            if(H5Sclose(id()) < 0) {
+    if (pf) {
+        if (!pf->closed() && valid()) {
+            if (H5Sclose(id()) < 0) {
                 throw Exception("Error on closing HDF5 data space");
             }
         }
@@ -81,12 +81,13 @@ inline void h5rd::DataSpace::close() {
 inline h5rd::DataSpace::~DataSpace() {
     try {
         close();
-    } catch(const Exception &e) {
+    } catch (const Exception &e) {
         std::cerr << "Unable to close hdf5 data space: " << e.what() << std::endl;
     }
 }
 
-inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, const dimensions &dims, const dimensions &maxDims) : SubObject(parentFile) {
+inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, const dimensions &dims, const dimensions &maxDims)
+        : SubObject(parentFile) {
     if (maxDims.empty()) {
         _hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
     } else {
