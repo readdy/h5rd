@@ -139,10 +139,10 @@ inline void VLENDataSet::append(const dimensions &dims, const std::vector<T> *co
         traj.reserve(n);
         for (auto i = 0; i < n; ++i) {
             auto val = &data[i];
-            hvl_t entry;
+            hvl_t entry {};
             entry.len = val->size();
             entry.p = val->data();
-            traj.push_back(std::move(entry));
+            traj.push_back(entry);
         }
     }
     {
