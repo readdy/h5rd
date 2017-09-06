@@ -45,9 +45,9 @@ public:
 
     DataSet &operator=(const DataSet &) = delete;
 
-    DataSet(DataSet &&) noexcept = default;
+    DataSet(DataSet &&) = default;
 
-    DataSet &operator=(DataSet &&) noexcept = default;
+    DataSet &operator=(DataSet &&) = default;
 
     template<typename T>
     void append(std::vector<T> &data);
