@@ -40,6 +40,12 @@ class PropertyList;
 
 class Filter {
 public:
+
+    /**
+     * default destructor for filter
+     */
+    virtual ~Filter() = default;
+
     /**
      * checks availability
      * @return true if available
@@ -73,6 +79,8 @@ public:
 
     SZIPFilter(CodingMethod method, unsigned int pixelsPerBlock);
 
+    ~SZIPFilter() override = default;
+
     bool available() const override;
 
     void activate(PropertyList &plist) override;
@@ -86,6 +94,9 @@ private:
 
 class NBITFilter : public Filter {
 public:
+
+    ~NBITFilter() override = default;
+
     bool available() const override;
 
     void activate(PropertyList &plist) override;
@@ -102,6 +113,8 @@ public:
 
     ScaleOffsetFilter(ScaleType scaleType, int scaleFactor);
 
+    ~ScaleOffsetFilter() override = default;
+
     bool available() const override;
 
     void activate(PropertyList &plist) override;
@@ -115,6 +128,9 @@ private:
 
 class ShuffleFilter : public Filter {
 public:
+
+    ~ShuffleFilter() override = default;
+
     bool available() const override;
 
     void activate(PropertyList &plist) override;
@@ -124,6 +140,9 @@ public:
 
 class Fletcher32Filter : public Filter {
 public:
+
+    ~Fletcher32Filter() override = default;
+
     bool available() const override;
 
     void activate(PropertyList &plist) override;
