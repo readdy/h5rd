@@ -1,4 +1,4 @@
-# h5rd - a leightweight hdf5 wrapper
+# h5rd - a lightweight hdf5 wrapper
 
 h5rd provides c++11 (or later) header-only access to some of the functionality of hdf5. It supports
 creating/opening groups, writing data sets of native or also array and compound types with the possibility
