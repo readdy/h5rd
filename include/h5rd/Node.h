@@ -69,6 +69,13 @@ public:
     void read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType);
 
     template<typename T>
+    void readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array);
+
+    template<typename T>
+    void readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array,
+                  DataSetType *memoryType, DataSetType *fileType);
+
+    template<typename T>
     std::unique_ptr<DataSet> createDataSet(const std::string &name, const dimensions &chunkSize,
                                            const dimensions &maxDims, const FilterConfiguration &filters = {});
 

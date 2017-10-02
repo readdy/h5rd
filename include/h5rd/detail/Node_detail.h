@@ -33,6 +33,7 @@
 #pragma once
 
 #include <H5LTpublic.h>
+#include <H5Tpublic.h>
 
 #include "../Exception.h"
 #include "../PropertyList.h"
@@ -316,7 +317,7 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     //blosc_compression::initialize();
 
     const auto n_array_dims = 1 + util::n_dims<T>::value;
-    auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
+    auto hid = H5Dopen(me()->id(), dataSetName.data(), H5P_DEFAULT);
 
     DataSpace memorySpace(me()->parentFile(), H5Dget_space(hid));
 
@@ -330,28 +331,64 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     const auto dims = memorySpace.dims();
     std::size_t required_length = 1;
     for (const auto dim : dims) {
-        // todo log::trace("dim len = {}", dim);
         required_length *= dim;
     }
-    // todo log::trace("required length = {}", required_length);
     array.resize(required_length);
 
     auto result = H5Dread(hid, memoryType->id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
 
     if (result < 0) {
-        // todo log::trace("Failed reading result!");
         throw Exception("Failed reading \"" + dataSetName + "\"!");
     }
 
     H5Dclose(hid);
+}
 
-    //for(std::size_t d = 0; d < ndim-1; ++d) {
-    //    for(auto& sub_arr : array) {
-    //        sub_arr.resize(dims[1]);
-    //    }
-    //}
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array) {
+    STDDataSetType<T> stdDST(me()->parentFile());
+    NativeDataSetType<T> nDST(me()->parentFile());
+    readVLEN(dataSetName, array, &stdDST, &nDST);
+}
 
-    // todo reshape array to dims
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array,
+                                 h5rd::DataSetType *memoryType, h5rd::DataSetType *fileType) {
+
+    VLENDataSetType vlenMemoryType(*memoryType);
+    VLENDataSetType vlenFileType(*fileType);
+
+    const auto n_array_dims = 1 + util::n_dims<T>::value;
+    auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
+
+    DataSpace memorySpace(me()->parentFile(), H5Dget_space(hid));
+
+    std::size_t required_length = 1;
+    for (const auto dim : memorySpace.dims()) {
+        required_length *= dim;
+    }
+
+    {
+        std::unique_ptr<hvl_t[]> rawData(new hvl_t[required_length]);
+
+        auto result = H5Dread(hid, vlenMemoryType.id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, rawData.get());
+
+        if (result < 0) {
+            throw Exception("Failed reading \"" + dataSetName + "\"!");
+        }
+
+        array.resize(required_length);
+        auto arrayIt = array.begin();
+        for (auto it = rawData.get(); it != rawData.get() + required_length; ++it, ++arrayIt) {
+            const auto &container = *it;
+            auto ptr = static_cast<T *>(container.p);
+            *arrayIt = std::vector<T>(ptr, ptr + container.len);
+        }
+    }
+
+    H5Dclose(hid);
 }
 
 template<typename Container>

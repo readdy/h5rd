@@ -174,4 +174,85 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
 
 }
 
+TEST(TestH5ReaDDy, ReadWriteVLENDataSet) {
+    using namespace h5rd;
+    auto f = File::create("test.h5", File::Flag::OVERWRITE);
+    auto group = f->createGroup("/my/vlen/group");
+
+    auto ds = group.createVLENDataSet<double>("myds", {3}, {UNLIMITED_DIMS});
+
+    {
+        std::vector<std::vector<double>> data {{5., 7.}, {0., 1., 2., 3.}};
+        ds->append(data);
+    }
+
+    {
+        std::vector<std::vector<double>> data;
+        group.readVLEN("myds", data);
+
+        ASSERT_EQ(data.size(), 2);
+        ASSERT_EQ(data.at(0).size(), 2);
+        ASSERT_EQ(data.at(0).at(0), 5);
+        ASSERT_EQ(data.at(0).at(1), 7);
+        ASSERT_EQ(data.at(1).size(), 4);
+        ASSERT_EQ(data.at(1).at(0), 0);
+        ASSERT_EQ(data.at(1).at(1), 1);
+        ASSERT_EQ(data.at(1).at(2), 2);
+        ASSERT_EQ(data.at(1).at(3), 3);
+    }
+}
+
+TEST(TestH5ReaDDy, ReadWriteCompoundVLENDataSet) {
+    using namespace h5rd;
+    auto f = File::create("test.h5", File::Flag::OVERWRITE);
+    auto group = f->createGroup("/my/vlen/compound/group");
+
+    std::vector<std::vector<Stuff>> allStuffs;
+    allStuffs.resize(2);
+    {
+        auto &stuffs = allStuffs.at(0);
+        Stuff s1{1, 1.f, {{1, 1, 1}}};
+        Stuff s2{2, 2.f, {{2, 2, 2}}};
+        Stuff s3{3, 3.f, {{3, 3, 3}}};
+        stuffs.push_back(s1);
+        stuffs.push_back(s2);
+        stuffs.push_back(s3);
+    }
+    {
+        auto &stuffs = allStuffs.at(1);
+        Stuff s2{2, 2.f, {{5, 5, 5}}};
+        Stuff s3{3, 3.f, {{6, 6, 6}}};
+        stuffs.push_back(s2);
+        stuffs.push_back(s3);
+    }
+
+    auto types = getCompoundTypes(f->parentFile());
+
+
+    auto ds = group.createVLENDataSet("stuffs", {3}, {UNLIMITED_DIMS}, std::get<0>(types), std::get<1>(types));
+    {
+        ds->append(allStuffs);
+    }
+
+
+    {
+        std::vector<std::vector<Stuff>> readBackStuff;
+        group.readVLEN("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types));
+        ASSERT_EQ(2, readBackStuff.size());
+        ASSERT_EQ(3, readBackStuff.at(0).size());
+        for(int i = 0; i < 3; ++i) {
+            ASSERT_EQ(readBackStuff.at(0).at(i).x, i+1);
+            ASSERT_EQ(readBackStuff.at(0).at(i).a, i+1);
+            for(int j = 0; j < 3; ++j) ASSERT_EQ(readBackStuff.at(0).at(i).xyz.at(j), i+1);
+        }
+        ASSERT_EQ(2, readBackStuff.at(1).size());
+        for(int i = 0; i < 2; ++i) {
+            ASSERT_EQ(readBackStuff.at(1).at(i).x, i+2);
+            ASSERT_EQ(readBackStuff.at(1).at(i).a, i+2);
+            for(int j = 0; j < 3; ++j) ASSERT_EQ(readBackStuff.at(1).at(i).xyz.at(j), i+5);
+        }
+    }
+
+}
+
 }
