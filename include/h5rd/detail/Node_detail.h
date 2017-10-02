@@ -386,7 +386,9 @@ inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std:
             auto ptr = static_cast<T *>(container.p);
             *arrayIt = std::vector<T>(ptr, ptr + container.len);
         }
+        H5Dvlen_reclaim (vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
     }
+
 
     H5Dclose(hid);
 }
