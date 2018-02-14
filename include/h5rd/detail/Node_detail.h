@@ -35,6 +35,7 @@
 #include <H5LTpublic.h>
 #include <H5Tpublic.h>
 #include <numeric>
+#include <cmath>
 
 #include "../Exception.h"
 #include "../PropertyList.h"
@@ -336,7 +337,7 @@ h5rd::Node<Container>::readSelection(const std::string &dataSetName, std::vector
         counts.resize(fileSpace.ndim());
         const auto dims = fileSpace.dims();
         for (std::size_t d = 0; d < fileSpace.ndim(); ++d) {
-            counts[d] = 1 + dims[d] / stride[d];
+            counts[d] = static_cast<std::size_t>(std::ceil(dims[d] / static_cast<double>(stride[d])));
         }
     }
 
@@ -390,12 +391,11 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
 
     const auto dims = fileSpace.dims();
 
-
     if (!stride.empty()) {
 
         std::vector<h5rd::dimension> counts(dims.size());
         for (std::size_t d = 0; d < dims.size(); ++d) {
-            counts[d] = 1 + dims[d] / stride[d];
+            counts[d] = static_cast<std::size_t>(std::ceil(dims[d] / static_cast<double>(stride[d])));
         }
         std::vector<hsize_t> offsets(dims.size(), 0);
 
