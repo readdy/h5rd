@@ -109,6 +109,14 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
             std::cout << "stuff: a=" << s.a << ", x=" << s.x << ", xyz=" << s.xyz.at(0) << "," << s.xyz.at(1) << ","
                       << s.xyz.at(2) << std::endl;
         }
+
+        std::vector<Stuff> stridedStuff;
+        group.read("stuffs", stridedStuff, &std::get<0>(types), &std::get<1>(types), {2});
+
+        ASSERT_EQ(stridedStuff.size(), 2);
+
+        ASSERT_EQ(stridedStuff.at(0).a, 3);
+        ASSERT_EQ(stridedStuff.at(1).a, 6);
     }
 
 }

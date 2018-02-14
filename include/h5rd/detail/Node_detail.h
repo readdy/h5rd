@@ -34,6 +34,7 @@
 
 #include <H5LTpublic.h>
 #include <H5Tpublic.h>
+#include <numeric>
 
 #include "../Exception.h"
 #include "../PropertyList.h"
@@ -304,41 +305,75 @@ h5rd::Node<Container>::createVLENDataSet(const std::string &name, const h5rd::di
 
 template<typename Container>
 template<typename T>
-inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array) {
+inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array,
+                                        std::vector<hsize_t> stride) {
     STDDataSetType<T> stdDST(me()->parentFile());
     NativeDataSetType<T> nDST(me()->parentFile());
-    read(dataSetName, array, &stdDST, &nDST);
+    read(dataSetName, array, &stdDST, &nDST, stride);
 }
 
 template<typename Container>
 template<typename T>
 inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType,
-                                        DataSetType *fileType) {
+                                        DataSetType *fileType, std::vector<hsize_t> stride) {
     //blosc_compression::initialize();
 
     const auto n_array_dims = 1 + util::n_dims<T>::value;
     auto hid = H5Dopen(me()->id(), dataSetName.data(), H5P_DEFAULT);
 
-    DataSpace memorySpace(me()->parentFile(), H5Dget_space(hid));
+    DataSpace fileSpace(me()->parentFile(), H5Dget_space(hid));
 
-    const auto ndim = memorySpace.ndim();
+    const auto ndim = fileSpace.ndim();
 
     //if(ndim != n_array_dims) {
     //    log::error("wrong dimensionality: {} != {}", ndim, n_array_dims);
     //    throw std::invalid_argument("wrong dimensionality when attempting to read a data set");
     //}
 
-    const auto dims = memorySpace.dims();
+    const auto dims = fileSpace.dims();
     std::size_t required_length = 1;
     for (const auto dim : dims) {
         required_length *= dim;
     }
-    array.resize(required_length);
 
-    auto result = H5Dread(hid, memoryType->id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
+    if (!stride.empty()) {
 
-    if (result < 0) {
-        throw Exception("Failed reading \"" + dataSetName + "\"!");
+        std::vector<h5rd::dimension> counts(dims.size());
+        for(std::size_t d = 0; d < dims.size(); ++d) {
+            counts[d] = 1 + dims[d] / stride[d];
+        }
+        std::vector<hsize_t> offsets(dims.size(), 0);
+
+        DataSpace memorySpace(me()->parentFile(), counts);
+
+        const auto nElements = std::accumulate(counts.begin(), counts.end(), 1, std::multiplies<hsize_t>());
+
+        H5Sselect_none(fileSpace.id());
+        array.resize(static_cast<std::size_t>(nElements));
+
+
+        auto status = H5Sselect_hyperslab (fileSpace.id(), H5S_SELECT_SET, offsets.data(),
+                                           stride.data(), counts.data(), nullptr);
+
+        if(status < 0) {
+            throw Exception("Failed selecting hyperslab for \"" + dataSetName + "\"!");
+        }
+
+        status = H5Dread (hid, memoryType->id(), memorySpace.id(), fileSpace.id(), H5P_DEFAULT, array.data());
+
+        if (status < 0) {
+            throw Exception("Failed reading \"" + dataSetName + "\"!");
+        }
+
+    } else {
+        H5Sselect_all(fileSpace.id());
+        array.resize(required_length);
+
+        auto result = H5Dread(hid, memoryType->id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, array.data());
+
+        if (result < 0) {
+            throw Exception("Failed reading \"" + dataSetName + "\"!");
+        }
     }
 
     H5Dclose(hid);

@@ -63,10 +63,11 @@ public:
     void write(const std::string &dataSetName, const dimensions &dims, const T *data);
 
     template<typename T>
-    void read(const std::string &dataSetName, std::vector<T> &array);
+    void read(const std::string &dataSetName, std::vector<T> &array, std::vector<hsize_t> stride={});
 
     template<typename T>
-    void read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType);
+    void read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType,
+              std::vector<hsize_t> stride={});
 
     template<typename T>
     void readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array);
