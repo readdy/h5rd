@@ -314,6 +314,64 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
 
 template<typename Container>
 template<typename T>
+inline void h5rd::Node<Container>::readSelection(const std::string &dataSetName, std::vector<T> &array,
+                                                 dimensions offsets, dimensions stride, dimensions count,
+                                                 dimensions block) {
+    STDDataSetType<T> stdDST(me()->parentFile());
+    NativeDataSetType<T> nDST(me()->parentFile());
+    readSelection(dataSetName, array, &stdDST, &nDST, offsets, stride, count, block);
+}
+
+template<typename Container>
+template<typename T>
+inline void
+h5rd::Node<Container>::readSelection(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType,
+                                     DataSetType *fileType,
+                                     dimensions offsets, dimensions stride, dimensions counts, dimensions block) {
+
+    auto hid = H5Dopen(me()->id(), dataSetName.data(), H5P_DEFAULT);
+    DataSpace fileSpace(me()->parentFile(), H5Dget_space(hid));
+
+    if (counts.empty()) {
+        counts.resize(fileSpace.ndim());
+        const auto dims = fileSpace.dims();
+        for (std::size_t d = 0; d < fileSpace.ndim(); ++d) {
+            counts[d] = 1 + dims[d] / stride[d];
+        }
+    }
+
+    DataSpace memorySpace(me()->parentFile(), counts);
+
+    const auto nElements = std::accumulate(counts.begin(), counts.end(), 1, std::multiplies<hsize_t>());
+    array.resize(static_cast<std::size_t>(nElements));
+
+    H5Sselect_none(fileSpace.id());
+
+    if (offsets.empty()) {
+        offsets.resize(fileSpace.ndim());
+    }
+
+    auto status = H5Sselect_hyperslab(fileSpace.id(), H5S_SELECT_SET,
+                                      offsets.data(),
+                                      stride.empty() ? nullptr : stride.data(),
+                                      counts.data(),
+                                      block.empty() ? nullptr : block.data());
+
+    if (status < 0) {
+        throw Exception("Failed selecting hyperslab for \"" + dataSetName + "\"!");
+    }
+
+    status = H5Dread(hid, memoryType->id(), memorySpace.id(), fileSpace.id(), H5P_DEFAULT, array.data());
+
+    if (status < 0) {
+        throw Exception("Failed reading \"" + dataSetName + "\"!");
+    }
+
+    H5Dclose(hid);
+}
+
+template<typename Container>
+template<typename T>
 inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType,
                                         DataSetType *fileType, std::vector<hsize_t> stride) {
     //blosc_compression::initialize();
@@ -331,15 +389,12 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
     //}
 
     const auto dims = fileSpace.dims();
-    std::size_t required_length = 1;
-    for (const auto dim : dims) {
-        required_length *= dim;
-    }
+
 
     if (!stride.empty()) {
 
         std::vector<h5rd::dimension> counts(dims.size());
-        for(std::size_t d = 0; d < dims.size(); ++d) {
+        for (std::size_t d = 0; d < dims.size(); ++d) {
             counts[d] = 1 + dims[d] / stride[d];
         }
         std::vector<hsize_t> offsets(dims.size(), 0);
@@ -352,20 +407,24 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
         array.resize(static_cast<std::size_t>(nElements));
 
 
-        auto status = H5Sselect_hyperslab (fileSpace.id(), H5S_SELECT_SET, offsets.data(),
-                                           stride.data(), counts.data(), nullptr);
+        auto status = H5Sselect_hyperslab(fileSpace.id(), H5S_SELECT_SET, offsets.data(),
+                                          stride.data(), counts.data(), nullptr);
 
-        if(status < 0) {
+        if (status < 0) {
             throw Exception("Failed selecting hyperslab for \"" + dataSetName + "\"!");
         }
 
-        status = H5Dread (hid, memoryType->id(), memorySpace.id(), fileSpace.id(), H5P_DEFAULT, array.data());
+        status = H5Dread(hid, memoryType->id(), memorySpace.id(), fileSpace.id(), H5P_DEFAULT, array.data());
 
         if (status < 0) {
             throw Exception("Failed reading \"" + dataSetName + "\"!");
         }
 
     } else {
+        std::size_t required_length = 1;
+        for (const auto dim : dims) {
+            required_length *= dim;
+        }
         H5Sselect_all(fileSpace.id());
         array.resize(required_length);
 
@@ -390,7 +449,7 @@ inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std:
 template<typename Container>
 template<typename T>
 inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array,
-                                 h5rd::DataSetType *memoryType, h5rd::DataSetType *fileType) {
+                                            h5rd::DataSetType *memoryType, h5rd::DataSetType *fileType) {
 
     VLENDataSetType vlenMemoryType(*memoryType);
     VLENDataSetType vlenFileType(*fileType);
@@ -421,7 +480,7 @@ inline void h5rd::Node<Container>::readVLEN(const std::string &dataSetName, std:
             auto ptr = static_cast<T *>(container.p);
             *arrayIt = std::vector<T>(ptr, ptr + container.len);
         }
-        H5Dvlen_reclaim (vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
+        H5Dvlen_reclaim(vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
     }
 
 

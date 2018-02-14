@@ -117,6 +117,13 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
 
         ASSERT_EQ(stridedStuff.at(0).a, 3);
         ASSERT_EQ(stridedStuff.at(1).a, 6);
+
+        std::vector<Stuff> selectedStuff;
+        group.readSelection("stuffs", selectedStuff, &std::get<0>(types), &std::get<1>(types), {1}, {1}, {2});
+        ASSERT_EQ(selectedStuff.size(), 2);
+
+        ASSERT_EQ(selectedStuff.at(0).a, 4);
+        ASSERT_EQ(selectedStuff.at(1).a, 6);
     }
 
 }

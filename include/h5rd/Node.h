@@ -66,8 +66,17 @@ public:
     void read(const std::string &dataSetName, std::vector<T> &array, std::vector<hsize_t> stride={});
 
     template<typename T>
+    void readSelection(const std::string &dataSetName, std::vector<T> &array,
+              dimensions offsets={}, dimensions stride={}, dimensions count={}, dimensions block={});
+
+    template<typename T>
     void read(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType,
               std::vector<hsize_t> stride={});
+
+    template<typename T>
+    void readSelection(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType, DataSetType *fileType,
+              dimensions offsets={}, dimensions stride={}, dimensions count={}, dimensions block={});
+
 
     template<typename T>
     void readVLEN(const std::string &dataSetName, std::vector<std::vector<T>> &array);
