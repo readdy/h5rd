@@ -53,6 +53,7 @@ inline int convertFlag(const h5rd::File::Flag &flag) {
         case h5rd::File::Flag::DEFAULT:
             return H5F_ACC_RDWR | H5F_ACC_CREAT | H5F_ACC_TRUNC;
     }
+    throw std::logic_error("Unknown flag in convertFlag()!");
 }
 }
 
