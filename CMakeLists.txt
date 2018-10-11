@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.12)
 project(readdy_io)
 
 set(CMAKE_CXX_STANDARD 14)
 
-option(READDY_IO_TEST "Build tests?" ON)
+option(READDY_IO_TEST "Build tests?" OFF)
 
 set(READDY_IO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(READDY_IO_HEADERS
@@ -35,10 +35,26 @@ set(READDY_IO_HEADERS
 
 string(REPLACE "include/" "${CMAKE_CURRENT_SOURCE_DIR}/include/" READDY_IO_HEADERS "${READDY_IO_HEADERS}")
 
-find_package(HDF5 COMPONENTS HL REQUIRED)
-message(STATUS "HDF5_FOUND: ${HDF5_FOUND}, version ${HDF5_VERSION}")
+add_library(h5rd INTERFACE)
+add_library(h5rd::h5rd ALIAS h5rd)
+
+
+target_include_directories(
+        h5rd
+        INTERFACE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
+        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+set(HEADER_BASE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
 
 if (READDY_IO_TEST)
+
+    find_package(HDF5 COMPONENTS HL REQUIRED)
+    message(STATUS "HDF5_FOUND: ${HDF5_FOUND}, version ${HDF5_VERSION}")
+
+
     include(cmake/Modules/DownloadProject.cmake)
     download_project(PROJ googletest
             GIT_REPOSITORY https://github.com/google/googletest.git
