@@ -1,3 +1,5 @@
+#include <utility>
+
 /********************************************************************
  * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
@@ -30,12 +32,10 @@
  * @copyright GNU Lesser General Public License v3.0
  */
 
-#include "gtest/gtest.h"
-#include "h5rd/h5rd.h"
+#include <h5rd/h5rd.h>
+#include <catch2/catch.hpp>
 
-namespace {
-
-TEST(TestH5ReaDDy, Sanity) {
+TEST_CASE("Sanity checks", "[sanity]") {
     using namespace h5rd;
 
     {
@@ -71,7 +71,7 @@ struct Stuff {
 
 auto getCompoundTypes = [](h5rd::Object::ParentFileRef parentFile) {
     using namespace h5rd;
-    NativeCompoundType stuffType = NativeCompoundTypeBuilder(sizeof(Stuff), parentFile)
+    NativeCompoundType stuffType = NativeCompoundTypeBuilder(sizeof(Stuff), std::move(parentFile))
             .insert<decltype(std::declval<Stuff>().a)>("a", offsetof(Stuff, a))
             .insert<decltype(std::declval<Stuff>().x)>("x", offsetof(Stuff, x))
             .insertStdArray<decltype(std::declval<Stuff>().xyz)>("xyz", offsetof(Stuff, xyz))
@@ -80,7 +80,7 @@ auto getCompoundTypes = [](h5rd::Object::ParentFileRef parentFile) {
     return std::make_tuple(std::move(stuffType), std::move(stdStuffType));
 };
 
-TEST(TestH5ReaDDy, ReadWriteCompoundType) {
+TEST_CASE("Check reading and writing of compound types", "[compound]") {
     using namespace h5rd;
     {
         auto f = File::create("test.h5", File::Flag::OVERWRITE);
@@ -104,7 +104,7 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
         std::vector<Stuff> stuffs;
         group.read("stuffs", stuffs, &std::get<0>(types), &std::get<1>(types));
 
-        ASSERT_EQ(stuffs.size(), 3);
+        REQUIRE(stuffs.size() == 3);
         for (const auto &s : stuffs) {
             std::cout << "stuff: a=" << s.a << ", x=" << s.x << ", xyz=" << s.xyz.at(0) << "," << s.xyz.at(1) << ","
                       << s.xyz.at(2) << std::endl;
@@ -113,22 +113,22 @@ TEST(TestH5ReaDDy, ReadWriteCompoundType) {
         std::vector<Stuff> stridedStuff;
         group.read("stuffs", stridedStuff, &std::get<0>(types), &std::get<1>(types), {2});
 
-        ASSERT_EQ(stridedStuff.size(), 2);
+        REQUIRE(stridedStuff.size() == 2);
 
-        ASSERT_EQ(stridedStuff.at(0).a, 3);
-        ASSERT_EQ(stridedStuff.at(1).a, 6);
+        REQUIRE(stridedStuff.at(0).a == 3);
+        REQUIRE(stridedStuff.at(1).a == 6);
 
         std::vector<Stuff> selectedStuff;
         group.readSelection("stuffs", selectedStuff, &std::get<0>(types), &std::get<1>(types), {1}, {1}, {2});
-        ASSERT_EQ(selectedStuff.size(), 2);
+        REQUIRE(selectedStuff.size() == 2);
 
-        ASSERT_EQ(selectedStuff.at(0).a, 4);
-        ASSERT_EQ(selectedStuff.at(1).a, 6);
+        REQUIRE(selectedStuff.at(0).a == 4);
+        REQUIRE(selectedStuff.at(1).a == 6);
     }
 
 }
 
-TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
+TEST_CASE("Check reading and writing of compound types with repeated opening and closing.", "[compound]") {
     using namespace h5rd;
     auto f = File::create("test.h5", File::Flag::OVERWRITE);
     auto group = f->createGroup("/my/compound/group");
@@ -151,7 +151,7 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
         ds->append({stuffs.size()}, stuffs.data());
         ds->append({stuffs.size()}, stuffs.data());
         f->close();
-        ASSERT_TRUE(f->closed());
+        REQUIRE(f->closed());
 
         f.reset();
     }
@@ -163,15 +163,15 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
         std::vector<Stuff> stuffs2;
         group2.read("stuffs", stuffs2, &std::get<0>(types2), &std::get<1>(types2));
 
-        ASSERT_EQ(stuffs2.size(), 6);
+        REQUIRE(stuffs2.size() == 6);
 
         int i = 1;
         for (const auto &s : stuffs2) {
-            ASSERT_EQ(s.a, 1 + ((i - 1) % 3));
-            ASSERT_EQ(s.x, 1 + ((i - 1) % 3));
-            ASSERT_EQ(s.xyz.at(0), 1 + ((i - 1) % 3));
-            ASSERT_EQ(s.xyz.at(1), 1 + ((i - 1) % 3));
-            ASSERT_EQ(s.xyz.at(2), 1 + ((i - 1) % 3));
+            REQUIRE(s.a == 1 + ((i - 1) % 3));
+            REQUIRE(s.x == 1 + ((i - 1) % 3));
+            REQUIRE(s.xyz.at(0) == 1 + ((i - 1) % 3));
+            REQUIRE(s.xyz.at(1) == 1 + ((i - 1) % 3));
+            REQUIRE(s.xyz.at(2) == 1 + ((i - 1) % 3));
             ++i;
         }
     }
@@ -189,7 +189,7 @@ TEST(TestH5ReaDDy, ReadWriteCompoundTypeClose) {
 
 }
 
-TEST(TestH5ReaDDy, ReadWriteVLENDataSet) {
+TEST_CASE("Reading and writing of VLEN data set", "[vlen]") {
     using namespace h5rd;
     auto f = File::create("test.h5", File::Flag::OVERWRITE);
     auto group = f->createGroup("/my/vlen/group");
@@ -205,19 +205,19 @@ TEST(TestH5ReaDDy, ReadWriteVLENDataSet) {
         std::vector<std::vector<double>> data;
         group.readVLEN("myds", data);
 
-        ASSERT_EQ(data.size(), 2);
-        ASSERT_EQ(data.at(0).size(), 2);
-        ASSERT_EQ(data.at(0).at(0), 5);
-        ASSERT_EQ(data.at(0).at(1), 7);
-        ASSERT_EQ(data.at(1).size(), 4);
-        ASSERT_EQ(data.at(1).at(0), 0);
-        ASSERT_EQ(data.at(1).at(1), 1);
-        ASSERT_EQ(data.at(1).at(2), 2);
-        ASSERT_EQ(data.at(1).at(3), 3);
+        REQUIRE(data.size() == 2);
+        REQUIRE(data.at(0).size() == 2);
+        REQUIRE(data.at(0).at(0) == 5);
+        REQUIRE(data.at(0).at(1) == 7);
+        REQUIRE(data.at(1).size() == 4);
+        REQUIRE(data.at(1).at(0) == 0);
+        REQUIRE(data.at(1).at(1) == 1);
+        REQUIRE(data.at(1).at(2) == 2);
+        REQUIRE(data.at(1).at(3) == 3);
     }
 }
 
-TEST(TestH5ReaDDy, ReadWriteCompoundVLENDataSet) {
+TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
     using namespace h5rd;
     auto f = File::create("test.h5", File::Flag::OVERWRITE);
     auto group = f->createGroup("/my/vlen/compound/group");
@@ -253,21 +253,23 @@ TEST(TestH5ReaDDy, ReadWriteCompoundVLENDataSet) {
     {
         std::vector<std::vector<Stuff>> readBackStuff;
         group.readVLEN("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types));
-        ASSERT_EQ(2, readBackStuff.size());
-        ASSERT_EQ(3, readBackStuff.at(0).size());
+        REQUIRE(2 == readBackStuff.size());
+        REQUIRE(3 == readBackStuff.at(0).size());
         for(int i = 0; i < 3; ++i) {
-            ASSERT_EQ(readBackStuff.at(0).at(i).x, i+1);
-            ASSERT_EQ(readBackStuff.at(0).at(i).a, i+1);
-            for(int j = 0; j < 3; ++j) ASSERT_EQ(readBackStuff.at(0).at(i).xyz.at(j), i+1);
+            REQUIRE(readBackStuff.at(0).at(i).x == i+1);
+            REQUIRE(readBackStuff.at(0).at(i).a == i+1);
+            for(int j = 0; j < 3; ++j) {
+                REQUIRE(readBackStuff.at(0).at(i).xyz.at(j) == i+1);
+            }
         }
-        ASSERT_EQ(2, readBackStuff.at(1).size());
+        REQUIRE(2 == readBackStuff.at(1).size());
         for(int i = 0; i < 2; ++i) {
-            ASSERT_EQ(readBackStuff.at(1).at(i).x, i+2);
-            ASSERT_EQ(readBackStuff.at(1).at(i).a, i+2);
-            for(int j = 0; j < 3; ++j) ASSERT_EQ(readBackStuff.at(1).at(i).xyz.at(j), i+5);
+            REQUIRE(readBackStuff.at(1).at(i).x == i+2);
+            REQUIRE(readBackStuff.at(1).at(i).a == i+2);
+            for(int j = 0; j < 3; ++j) {
+                REQUIRE(readBackStuff.at(1).at(i).xyz.at(j) == i+5);
+            }
         }
     }
-
-}
 
 }

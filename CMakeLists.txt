@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.12)
-project(readdy_io)
 
-set(CMAKE_CXX_STANDARD 14)
+get_directory_property(H5RD_HAS_PARENT PARENT_DIRECTORY)
+if(H5RD_HAS_PARENT)
+    set(H5RD_IS_SUBPROJECT ON)
+endif()
 
-option(READDY_IO_TEST "Build tests?" OFF)
+set(CMAKE_CXX_STANDARD 17)
 
 set(READDY_IO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(READDY_IO_HEADERS
@@ -48,27 +50,25 @@ target_include_directories(
 
 set(HEADER_BASE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+if (NOT H5RD_IS_SUBPROJECT)
+    option(H5RD_BUILD_TESTING "Build h5rd tests" ON)
+endif()
 
-if (READDY_IO_TEST)
+if (H5RD_BUILD_TESTING)
 
     find_package(HDF5 COMPONENTS HL REQUIRED)
     message(STATUS "HDF5_FOUND: ${HDF5_FOUND}, version ${HDF5_VERSION}")
 
-
-    include(cmake/Modules/DownloadProject.cmake)
-    download_project(PROJ googletest
-            GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG release-1.8.0
-            ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-            )
-
-    # Prevent GoogleTest from overriding our compiler/linker options
-    # when building with Visual Studio
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-    add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-
-    enable_testing()
-
+    if (EXISTS ${CMAKE_CURRENT_LIST_DIR}/contrib/Catch2/CMakeLists.txt)
+        add_subdirectory(contrib/Catch2)
+        include(${CMAKE_CURRENT_LIST_DIR}/contrib/Catch2/contrib/Catch.cmake)
+    elseif (NOT TARGET Catch2::Catch2)
+        find_package(Catch2 QUIET)
+        if (CATCH2_FOUND)
+            include(Catch)
+        else()
+            message(SEND_ERROR "Catch2 not found.")
+        endif()
+    endif ()
     add_subdirectory(tests)
 endif()

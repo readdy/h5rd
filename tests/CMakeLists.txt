@@ -1,17 +1,4 @@
-# Find pthread library
-find_package(Threads REQUIRED)
-
-set(TEST_SOURCES
-        TestMain.cpp)
-
-add_executable(tests ${TEST_SOURCES} ${READDY_IO_HEADERS})
-
-target_include_directories(tests PRIVATE
-        ${READDY_IO_INCLUDE_DIR}
-        ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR}
-        "${gtest_SOURCE_DIR}/include" "${gmock_SOURCE_DIR}/include")
-
-target_link_libraries(tests PUBLIC
-        gmock_main
-        Threads::Threads
-        ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+add_executable (h5rd_test main.cpp Sanity.cpp)
+target_link_libraries(h5rd_test h5rd Catch2::Catch2 ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+target_include_directories(h5rd_test PUBLIC ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
+catch_discover_tests(h5rd_test)
