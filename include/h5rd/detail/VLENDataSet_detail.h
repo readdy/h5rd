@@ -51,7 +51,7 @@
 namespace h5rd {
 
 inline VLENDataSet::VLENDataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType)
-        : SubObject(parentFile), _memoryType(memoryType), _fileType(fileType) {}
+        : SubObject(std::move(parentFile)), _memoryType(memoryType), _fileType(fileType) {}
 
 inline std::shared_ptr<DataSpace> VLENDataSet::getFileSpace() const {
     auto _hid = H5Dget_space(id());

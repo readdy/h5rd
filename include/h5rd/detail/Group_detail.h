@@ -48,7 +48,8 @@
 #include "../Group.h"
 #include "../Node.h"
 
-inline h5rd::Group::Group(std::string path, ParentFileRef parentFile) : SubObject(parentFile), path(std::move(path)) {}
+inline h5rd::Group::Group(std::string path, ParentFileRef parentFile) : SubObject(std::move(parentFile)),
+                                                                        path(std::move(path)) {}
 
 inline h5rd::Group::~Group() {
     try {

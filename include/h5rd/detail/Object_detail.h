@@ -73,13 +73,13 @@ inline h5rd::Object::Object(h5rd::Object &&rhs) noexcept
 }
 
 inline h5rd::Object &h5rd::Object::operator=(h5rd::Object &&rhs) noexcept {
-    _hid = std::move(rhs._hid);
+    _hid = rhs._hid;
     _parentFile = std::move(rhs._parentFile);
-    _closed = std::move(rhs._closed);
+    _closed = rhs._closed;
     rhs._closed = true;
     return *this;
 }
 
 inline h5rd::SubObject::SubObject(ParentFileRef parentFile) : Object() {
-    _parentFile = parentFile;
+    _parentFile = std::move(parentFile);
 }

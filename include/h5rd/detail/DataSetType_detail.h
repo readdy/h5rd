@@ -46,9 +46,10 @@
 #pragma once
 
 #include <iostream>
+#include <utility>
 #include "../DataSetType.h"
 
-inline h5rd::DataSetType::DataSetType(handle_id hid, ParentFileRef parentFile) : SubObject(parentFile) {
+inline h5rd::DataSetType::DataSetType(handle_id hid, ParentFileRef parentFile) : SubObject(std::move(parentFile)) {
     _hid = hid;
 }
 
@@ -103,109 +104,116 @@ inline VLENDataSetType::VLENDataSetType(const DataSetType &other) : DataSetType(
 
 template<>
 inline STDDataSetType<unsigned char>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I8LE),
-                                                                                             parentFile) {}
+                                                                                             std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<short>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I16LE), parentFile) {}
+STDDataSetType<short>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I16LE),
+                                                                              std::move(parentFile)) {}
 
 template<>
 inline STDDataSetType<unsigned short>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U16LE),
-                                                                                              parentFile) {}
+                                                                                              std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<int>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I32LE), parentFile) {}
+STDDataSetType<int>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I32LE),
+                                                                            std::move(parentFile)) {}
 
 template<>
 inline STDDataSetType<unsigned int>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U32LE),
-                                                                                            parentFile) {}
+                                                                                            std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I64LE), parentFile) {}
+STDDataSetType<long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I64LE),
+                                                                             std::move(parentFile)) {}
 
 template<>
 inline STDDataSetType<unsigned long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U64LE),
-                                                                                             parentFile) {}
+                                                                                             std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<long long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I64LE), parentFile) {}
+STDDataSetType<long long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_I64LE),
+                                                                                  std::move(parentFile)) {}
 
 template<>
 inline
 STDDataSetType<unsigned long long>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_STD_U64LE),
-                                                                                           parentFile) {}
+                                                                                           std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<float>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_IEEE_F32LE), parentFile) {}
+STDDataSetType<float>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_IEEE_F32LE),
+                                                                              std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<double>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_IEEE_F64LE), parentFile) {}
+STDDataSetType<double>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_IEEE_F64LE),
+                                                                               std::move(parentFile)) {}
 
 template<>
 inline
-STDDataSetType<std::string>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_C_S1), parentFile) {}
+STDDataSetType<std::string>::STDDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_C_S1),
+                                                                                    std::move(parentFile)) {}
 
 template<>
 inline
 NativeDataSetType<unsigned char>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_UCHAR),
-                                                                                            parentFile) {}
+                                                                                            std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<short>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_SHORT),
-                                                                                           parentFile) {}
+                                                                                           std::move(parentFile)) {}
 
 template<>
 inline
 NativeDataSetType<unsigned short>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_USHORT),
-                                                                                             parentFile) {}
+                                                                                             std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<int>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_INT),
-                                                                                         parentFile) {}
+                                                                                         std::move(parentFile)) {}
 
 template<>
 inline
 NativeDataSetType<unsigned int>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_UINT),
-                                                                                           parentFile) {}
+                                                                                           std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_LONG),
-                                                                                          parentFile) {}
+                                                                                          std::move(parentFile)) {}
 
 template<>
 inline
 NativeDataSetType<unsigned long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_ULONG),
-                                                                                            parentFile) {}
+                                                                                            std::move(parentFile)) {}
 
 template<>
 inline
 NativeDataSetType<long long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_LLONG),
-                                                                                        parentFile) {}
+                                                                                        std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<unsigned long long>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(
-        H5Tcopy(H5T_NATIVE_ULLONG), parentFile) {}
+        H5Tcopy(H5T_NATIVE_ULLONG), std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<float>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_FLOAT),
-                                                                                           parentFile) {}
+                                                                                           std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<double>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_DOUBLE),
-                                                                                            parentFile) {}
+                                                                                            std::move(parentFile)) {}
 
 template<>
 inline NativeDataSetType<bool>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_NATIVE_HBOOL),
-                                                                                          parentFile) {}
+                                                                                          std::move(parentFile)) {}
 
 template<>
-inline NativeDataSetType<std::string>::NativeDataSetType(ParentFileRef parentFile) : DataSetType(H5Tcopy(H5T_C_S1),
-                                                                                                 parentFile) {}
+inline NativeDataSetType<std::string>::NativeDataSetType(ParentFileRef parentFile)
+    : DataSetType(H5Tcopy(H5T_C_S1), std::move(parentFile)) {}
 
 template<typename T, typename enable>
 inline NativeStdArrayDataSetType<T, enable>::NativeStdArrayDataSetType(ParentFileRef parentFile)
@@ -230,11 +238,11 @@ inline STDArrayDataSetType<T, len>::STDArrayDataSetType(ParentFileRef parentFile
 
 inline NativeCompoundType::NativeCompoundType(handle_id tid, ParentFileRef parentFile,
                                               std::vector<DataSetType> &&insertTypes)
-        : DataSetType(tid, parentFile), insertedTypes(std::move(insertTypes)) {}
+        : DataSetType(tid, std::move(parentFile)), insertedTypes(std::move(insertTypes)) {}
 
 inline NativeCompoundTypeBuilder::NativeCompoundTypeBuilder(std::size_t size, Object::ParentFileRef parentFile) {
     tid = H5Tcreate(H5T_COMPOUND, size);
-    _parentFile = parentFile;
+    _parentFile = std::move(parentFile);
 }
 
 inline NativeCompoundType NativeCompoundTypeBuilder::build() {

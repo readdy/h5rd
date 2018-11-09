@@ -341,22 +341,22 @@ template<typename T>
 inline void
 h5rd::Node<Container>::readSelection(const std::string &dataSetName, std::vector<T> &array, DataSetType *memoryType,
                                      DataSetType *fileType,
-                                     dimensions offsets, dimensions stride, dimensions counts, dimensions block) {
+                                     dimensions offsets, dimensions stride, dimensions count, dimensions block) {
 
     auto hid = H5Dopen(me()->id(), dataSetName.data(), H5P_DEFAULT);
     DataSpace fileSpace(me()->parentFile(), H5Dget_space(hid));
 
-    if (counts.empty()) {
-        counts.resize(fileSpace.ndim());
+    if (count.empty()) {
+        count.resize(fileSpace.ndim());
         const auto dims = fileSpace.dims();
         for (std::size_t d = 0; d < fileSpace.ndim(); ++d) {
-            counts[d] = static_cast<std::size_t>(std::ceil(dims[d] / static_cast<double>(stride[d])));
+            count[d] = static_cast<std::size_t>(std::ceil(dims[d] / static_cast<double>(stride[d])));
         }
     }
 
-    DataSpace memorySpace(me()->parentFile(), counts);
+    DataSpace memorySpace(me()->parentFile(), count);
 
-    const auto nElements = std::accumulate(counts.begin(), counts.end(), 1, std::multiplies<hsize_t>());
+    const auto nElements = std::accumulate(count.begin(), count.end(), 1, std::multiplies<>());
     array.resize(static_cast<std::size_t>(nElements));
 
     H5Sselect_none(fileSpace.id());
@@ -368,7 +368,7 @@ h5rd::Node<Container>::readSelection(const std::string &dataSetName, std::vector
     auto status = H5Sselect_hyperslab(fileSpace.id(), H5S_SELECT_SET,
                                       offsets.data(),
                                       stride.empty() ? nullptr : stride.data(),
-                                      counts.data(),
+                                      count.data(),
                                       block.empty() ? nullptr : block.data());
 
     if (status < 0) {
@@ -414,7 +414,7 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
 
         DataSpace memorySpace(me()->parentFile(), counts);
 
-        const auto nElements = std::accumulate(counts.begin(), counts.end(), 1, std::multiplies<hsize_t>());
+        const auto nElements = std::accumulate(counts.begin(), counts.end(), 1, std::multiplies<>());
 
         H5Sselect_none(fileSpace.id());
         array.resize(static_cast<std::size_t>(nElements));
@@ -448,6 +448,78 @@ inline void h5rd::Node<Container>::read(const std::string &dataSetName, std::vec
         }
     }
 
+    H5Dclose(hid);
+}
+
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::readVLENSelection(const std::string &dataSetName, std::vector<std::vector<T>> &array,
+                                                     h5rd::dimensions offsets, h5rd::dimensions stride,
+                                                     h5rd::dimensions count, h5rd::dimensions block) {
+    STDDataSetType<T> stdDST(me()->parentFile());
+    NativeDataSetType<T> nDST(me()->parentFile());
+    readVLENSelection(dataSetName, array, &stdDST, &nDST, offsets, stride, count, block);
+}
+
+template<typename Container>
+template<typename T>
+inline void h5rd::Node<Container>::readVLENSelection(const std::string &dataSetName, std::vector<std::vector<T>> &array,
+                                                     h5rd::DataSetType *memoryType, h5rd::DataSetType *fileType,
+                                                     h5rd::dimensions offsets, h5rd::dimensions stride,
+                                                     h5rd::dimensions count, h5rd::dimensions block) {
+    auto hid = H5Dopen2(me()->id(), dataSetName.data(), H5P_DEFAULT);
+    {
+        DataSpace fileSpace(me()->parentFile(), H5Dget_space(hid));
+
+        VLENDataSetType vlenMemoryType(*memoryType);
+        VLENDataSetType vlenFileType(*fileType);
+
+        if (count.empty()) {
+            count.resize(fileSpace.ndim());
+            const auto dims = fileSpace.dims();
+            for (std::size_t d = 0; d < fileSpace.ndim(); ++d) {
+                count[d] = static_cast<std::size_t>(std::ceil(dims[d] / static_cast<double>(stride[d])));
+            }
+        }
+
+        DataSpace memorySpace(me()->parentFile(), count);
+
+        const auto nElements = std::accumulate(count.begin(), count.end(), 1, std::multiplies<>());
+
+        H5Sselect_none(fileSpace.id());
+
+        if (offsets.empty()) {
+            offsets.resize(fileSpace.ndim());
+        }
+
+        auto status = H5Sselect_hyperslab(fileSpace.id(), H5S_SELECT_SET,
+                                          offsets.data(),
+                                          stride.empty() ? nullptr : stride.data(),
+                                          count.data(),
+                                          block.empty() ? nullptr : block.data());
+        if (status < 0) {
+            throw Exception("Failed selecting VLEN hyperslab for \"" + dataSetName + "\"!");
+        }
+
+        {
+            std::unique_ptr<hvl_t[]> rawData(new hvl_t[nElements]);
+
+            status = H5Dread(hid, vlenMemoryType.id(), memorySpace.id(), fileSpace.id(), H5P_DEFAULT, rawData.get());
+            //auto result = H5Dread(hid, vlenMemoryType.id(), H5S_ALL, H5S_ALL, H5P_DEFAULT, rawData.get());
+
+            if (status < 0) {
+                throw Exception("Failed reading \"" + dataSetName + "\"!");
+            }
+
+            array.reserve(static_cast<std::size_t>(nElements));
+            for (auto it = rawData.get(); it != rawData.get() + nElements; ++it) {
+                const auto &container = *it;
+                auto ptr = static_cast<T *>(container.p);
+                array.emplace_back(ptr, ptr + container.len);
+            }
+            H5Dvlen_reclaim(vlenMemoryType.id(), memorySpace.id(), H5P_DEFAULT, rawData.get());
+        }
+    }
     H5Dclose(hid);
 }
 

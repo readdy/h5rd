@@ -67,9 +67,13 @@ struct Stuff {
     int a;
     float x;
     std::array<short, 3> xyz;
+
+    bool operator==(const Stuff &rhs) const {
+        return a == rhs.a && x == rhs.x && xyz == rhs.xyz;
+    }
 };
 
-auto getCompoundTypes = [](h5rd::Object::ParentFileRef parentFile) {
+auto getCompoundTypes(h5rd::Object::ParentFileRef parentFile) {
     using namespace h5rd;
     NativeCompoundType stuffType = NativeCompoundTypeBuilder(sizeof(Stuff), std::move(parentFile))
             .insert<decltype(std::declval<Stuff>().a)>("a", offsetof(Stuff, a))
@@ -78,7 +82,7 @@ auto getCompoundTypes = [](h5rd::Object::ParentFileRef parentFile) {
             .build();
     STDCompoundType stdStuffType(stuffType);
     return std::make_tuple(std::move(stuffType), std::move(stdStuffType));
-};
+}
 
 TEST_CASE("Check reading and writing of compound types", "[compound]") {
     using namespace h5rd;
@@ -197,7 +201,8 @@ TEST_CASE("Reading and writing of VLEN data set", "[vlen]") {
     auto ds = group.createVLENDataSet<double>("myds", {3}, {UNLIMITED_DIMS});
 
     {
-        std::vector<std::vector<double>> data {{5., 7.}, {0., 1., 2., 3.}};
+        std::vector<std::vector<double>> data{{5., 7.},
+                                              {0., 1., 2., 3.}};
         ds->append(data);
     }
 
@@ -222,8 +227,7 @@ TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
     auto f = File::create("test.h5", File::Flag::OVERWRITE);
     auto group = f->createGroup("/my/vlen/compound/group");
 
-    std::vector<std::vector<Stuff>> allStuffs;
-    allStuffs.resize(2);
+    std::vector<std::vector<Stuff>> allStuffs(3);
     {
         auto &stuffs = allStuffs.at(0);
         Stuff s1{1, 1.f, {{1, 1, 1}}};
@@ -240,6 +244,17 @@ TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
         stuffs.push_back(s2);
         stuffs.push_back(s3);
     }
+    {
+        auto &stuffs = allStuffs.at(2);
+        Stuff s1{1, 1.f, {{1, 1, 1}}};
+        Stuff s2{2, 2.f, {{5, 5, 5}}};
+        Stuff s3{3, 3.f, {{6, 6, 6}}};
+        Stuff s4{4, 4.f, {{7, 7, 7}}};
+        stuffs.push_back(s1);
+        stuffs.push_back(s2);
+        stuffs.push_back(s3);
+        stuffs.push_back(s4);
+    }
 
     auto types = getCompoundTypes(f->parentFile());
 
@@ -253,23 +268,45 @@ TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
     {
         std::vector<std::vector<Stuff>> readBackStuff;
         group.readVLEN("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types));
-        REQUIRE(2 == readBackStuff.size());
+        REQUIRE(3 == readBackStuff.size());
         REQUIRE(3 == readBackStuff.at(0).size());
-        for(int i = 0; i < 3; ++i) {
-            REQUIRE(readBackStuff.at(0).at(i).x == i+1);
-            REQUIRE(readBackStuff.at(0).at(i).a == i+1);
-            for(int j = 0; j < 3; ++j) {
-                REQUIRE(readBackStuff.at(0).at(i).xyz.at(j) == i+1);
+        for (int i = 0; i < 3; ++i) {
+            REQUIRE(readBackStuff.at(0).at(i).x == i + 1);
+            REQUIRE(readBackStuff.at(0).at(i).a == i + 1);
+            for (int j = 0; j < 3; ++j) {
+                REQUIRE(readBackStuff.at(0).at(i).xyz.at(j) == i + 1);
             }
         }
         REQUIRE(2 == readBackStuff.at(1).size());
-        for(int i = 0; i < 2; ++i) {
-            REQUIRE(readBackStuff.at(1).at(i).x == i+2);
-            REQUIRE(readBackStuff.at(1).at(i).a == i+2);
-            for(int j = 0; j < 3; ++j) {
-                REQUIRE(readBackStuff.at(1).at(i).xyz.at(j) == i+5);
+        for (int i = 0; i < 2; ++i) {
+            REQUIRE(readBackStuff.at(1).at(i).x == i + 2);
+            REQUIRE(readBackStuff.at(1).at(i).a == i + 2);
+            for (int j = 0; j < 3; ++j) {
+                REQUIRE(readBackStuff.at(1).at(i).xyz.at(j) == i + 5);
             }
         }
     }
-
+    {
+        std::vector<std::vector<Stuff>> readBackStuff;
+        group.readVLENSelection("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types), {0}, {1}, {1});
+        REQUIRE(1 == readBackStuff.size());
+        REQUIRE(allStuffs[0].size() == readBackStuff[0].size());
+        REQUIRE(std::equal(readBackStuff[0].begin(), readBackStuff[0].end(), allStuffs[0].begin()));
+    }
+    {
+        std::vector<std::vector<Stuff>> readBackStuff;
+        group.readVLENSelection("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types), {1}, {1}, {1});
+        REQUIRE(1 == readBackStuff.size());
+        REQUIRE(allStuffs[1].size() == readBackStuff[0].size());
+        REQUIRE(std::equal(readBackStuff[0].begin(), readBackStuff[0].end(), allStuffs[1].begin()));
+    }
+    {
+        std::vector<std::vector<Stuff>> readBackStuff;
+        group.readVLENSelection("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types), {1}, {1}, {2});
+        REQUIRE(2 == readBackStuff.size());
+        REQUIRE(allStuffs[1].size() == readBackStuff[0].size());
+        REQUIRE(allStuffs[2].size() == readBackStuff[1].size());
+        REQUIRE(std::equal(readBackStuff[0].begin(), readBackStuff[0].end(), allStuffs[1].begin()));
+        REQUIRE(std::equal(readBackStuff[1].begin(), readBackStuff[1].end(), allStuffs[2].begin()));
+    }
 }

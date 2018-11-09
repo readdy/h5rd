@@ -47,6 +47,7 @@
 
 #include <iostream>
 #include <iterator>
+#include <utility>
 
 #include "../DataSet.h"
 #include "../DataSpace.h"
@@ -70,7 +71,7 @@ inline void h5rd::DataSet::close() {
 }
 
 inline h5rd::DataSet::DataSet(ParentFileRef parentFile, const DataSetType &memoryType, const DataSetType &fileType)
-        : SubObject(parentFile), _memoryType(memoryType), _fileType(fileType) {}
+        : SubObject(std::move(parentFile)), _memoryType(memoryType), _fileType(fileType) {}
 
 inline h5rd::dimension &h5rd::DataSet::extensionDim() {
     return _extensionDim;

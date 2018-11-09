@@ -100,7 +100,7 @@ inline h5rd::DataSpace::~DataSpace() {
 }
 
 inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, const dimensions &dims, const dimensions &maxDims)
-        : SubObject(parentFile) {
+        : SubObject(std::move(parentFile)) {
     if (maxDims.empty()) {
         _hid = H5Screate_simple(static_cast<int>(dims.size()), dims.data(), nullptr);
     } else {
@@ -113,6 +113,6 @@ inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, const dimensions &di
 
 // inline h5rd::DataSpace::DataSpace() : Object(nullptr) {}
 
-inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, h5rd::handle_id handle) : SubObject(parentFile) {
+inline h5rd::DataSpace::DataSpace(ParentFileRef parentFile, h5rd::handle_id handle) : SubObject(std::move(parentFile)) {
     _hid = handle;
 }
