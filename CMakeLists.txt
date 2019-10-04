@@ -39,12 +39,12 @@ set(H5RD_SOURCES
 target_sources(h5rd INTERFACE ${H5RD_SOURCES})
 
 
-target_include_directories(
-        h5rd
-        INTERFACE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
-        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-)
+#target_include_directories(
+#        h5rd
+#        INTERFACE
+#        "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
+#        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+#)
 
 if (NOT H5RD_IS_SUBPROJECT)
     option(H5RD_BUILD_TESTING "Build h5rd tests" ON)
