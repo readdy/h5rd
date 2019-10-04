@@ -72,7 +72,29 @@ inline void PropertyList::close() {
 inline PropertyList::PropertyList(handle_id cls_id, ParentFileRef parentFile) : super(std::move(parentFile)) {
     _hid = H5Pcreate(cls_id);
     if (!valid()) {
-        throw Exception("Failed to create property list!");
+        std::stringstream ss;
+        ss << "Failed to create property list! Reason: ";
+        {
+            auto pf = _parentFile.lock();
+            if(!pf) {
+                ss << "Parent file weak ptr was erased";
+            } else {
+                if(pf->closed()) {
+                    ss << "Parent file was closed";
+                } else {
+                    if(_hid == H5I_INVALID_HID) {
+                        ss << "HID was invalid id";
+                    } else {
+                        if (H5Iis_valid(_hid) <= 0) {
+                            ss << "H5Iis_valid check failed.";
+                        } else {
+                            ss << "nothing wrong, should not happen...";
+                        }
+                    }
+                }
+            }
+        }
+        throw Exception(ss.str());
     }
 }
 
