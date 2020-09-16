@@ -264,7 +264,6 @@ TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
         ds->append(allStuffs);
     }
 
-
     {
         std::vector<std::vector<Stuff>> readBackStuff;
         group.readVLEN("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types));
@@ -308,5 +307,11 @@ TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
         REQUIRE(allStuffs[2].size() == readBackStuff[1].size());
         REQUIRE(std::equal(readBackStuff[0].begin(), readBackStuff[0].end(), allStuffs[1].begin()));
         REQUIRE(std::equal(readBackStuff[1].begin(), readBackStuff[1].end(), allStuffs[2].begin()));
+    }
+
+    {
+        REQUIRE(1 == f->subgroups().size());
+        REQUIRE(1 == group.containedDataSets().size());
+        REQUIRE("stuffs" == group.containedDataSets()[0]);
     }
 }

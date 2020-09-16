@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 
+project(h5rd C CXX)
+
 get_directory_property(H5RD_HAS_PARENT PARENT_DIRECTORY)
 if(H5RD_HAS_PARENT)
     set(H5RD_IS_SUBPROJECT ON)

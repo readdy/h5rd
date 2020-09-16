@@ -94,7 +94,16 @@ inline std::vector<std::string> h5rd::Node<Container>::subElements(H5O_type_t ty
     result.reserve(group_info.nlinks);
     for (std::size_t i = 0; i < group_info.nlinks; ++i) {
         H5O_info_t oinfo{};
-        H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
+        herr_t errorCode;
+        #if !defined(H5Oget_info_by_idx_vers) || H5Oget_info_by_idx_vers == 3
+        errorCode = H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5O_INFO_BASIC, H5P_DEFAULT);
+        #else
+        errorCode = H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
+        #endif
+        if (errorCode < 0) {
+            throw std::runtime_error("failed to get info by idx, error code " + std::to_string(errorCode));
+        }
+
         if (oinfo.type == type) {
             auto size = 1 + H5Lget_name_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, NULL, 0, H5P_DEFAULT);
             if (size < 0) {
