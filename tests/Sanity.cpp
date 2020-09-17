@@ -1,5 +1,3 @@
-#include <utility>
-
 /********************************************************************
  * Copyright © 2017 Computational Molecular Biology Group,          * 
  *                  Freie Universität Berlin (GER)                  *
@@ -21,7 +19,6 @@
  * <http://www.gnu.org/licenses/>.                                  *
  ********************************************************************/
 
-
 /**
  * << detailed description >>
  *
@@ -31,6 +28,9 @@
  * @date 04.09.17
  * @copyright GNU Lesser General Public License v3.0
  */
+
+#include <utility>
+#include <iostream>
 
 #include <h5rd/h5rd.h>
 #include <catch2/catch.hpp>
@@ -103,6 +103,7 @@ TEST_CASE("Check reading and writing of compound types", "[compound]") {
     }
     {
         auto f = File::open("test.h5", File::Flag::READ_ONLY);
+        std::cout << f->subgroups()[0] << '\n';
         auto group = f->getSubgroup("/my/compound/group");
         auto types = getCompoundTypes(f->parentFile());
         std::vector<Stuff> stuffs;

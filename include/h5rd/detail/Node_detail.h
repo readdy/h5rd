@@ -95,11 +95,11 @@ inline std::vector<std::string> h5rd::Node<Container>::subElements(H5O_type_t ty
     for (std::size_t i = 0; i < group_info.nlinks; ++i) {
         H5O_info_t oinfo{};
         herr_t errorCode;
-        #if !defined(H5Oget_info_by_idx_vers) || H5Oget_info_by_idx_vers == 3
+        # if H5_VERS_MAJOR >= 1 && H5_VERS_MINOR >= 12
         errorCode = H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5O_INFO_BASIC, H5P_DEFAULT);
-        #else
+        # else
         errorCode = H5Oget_info_by_idx(id, ".", H5_INDEX_NAME, H5_ITER_INC, i, &oinfo, H5P_DEFAULT);
-        #endif
+        # endif
         if (errorCode < 0) {
             throw std::runtime_error("failed to get info by idx, error code " + std::to_string(errorCode));
         }
