@@ -87,6 +87,25 @@ inline h5rd::group_info h5rd::Node<Container>::info() const {
 }
 
 template<typename Container>
+inline std::shared_ptr<h5rd::DataSet> h5rd::Node<Container>::getDataset(const std::string &name, const DataSetType &memoryType, const DataSetType &fileType) {
+    auto dsId = H5Dopen(me()->id(), name.data(), H5P_DEFAULT);
+    if (dsId < 0) {
+        throw Exception("Could not open dataset " + name + "! (error code " + std::to_string(dsId) + ")");
+    }
+    auto ds = std::make_shared<DataSet>(me()->parentFile(), memoryType, fileType);
+    ds->_hid = dsId;
+    return ds;
+}
+
+template<typename Container>
+template<typename T>
+inline std::shared_ptr<h5rd::DataSet> h5rd::Node<Container>::getDataset(const std::string &name) {
+    STDDataSetType<T> stdDST(me()->parentFile());
+    NativeDataSetType<T> nDST(me()->parentFile());
+    return getDataset(name, stdDST, nDST);
+}
+
+template<typename Container>
 inline std::vector<std::string> h5rd::Node<Container>::subElements(H5O_type_t type) const {
     auto id = me()->id();
     std::vector<std::string> result;

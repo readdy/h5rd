@@ -266,6 +266,11 @@ TEST_CASE("Reading and writing of compound VLEN data set", "[vlen]") {
     }
 
     {
+        {
+            auto fs = group.getDataset("stuffs", std::get<0>(types), std::get<1>(types))->getFileSpace();
+            REQUIRE(fs->dims().size() == 1);
+            REQUIRE(fs->dims()[0] == 3);
+        }
         std::vector<std::vector<Stuff>> readBackStuff;
         group.readVLEN("stuffs", readBackStuff, &std::get<0>(types), &std::get<1>(types));
         REQUIRE(3 == readBackStuff.size());

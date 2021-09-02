@@ -63,6 +63,11 @@ public:
 
     Group getSubgroup(const std::string &name);
 
+    std::shared_ptr<DataSet> getDataset(const std::string &name, const DataSetType &memoryType, const DataSetType &fileType);
+
+    template<typename T>
+    std::shared_ptr<DataSet> getDataset(const std::string &name);
+
     bool exists(const std::string &name) const;
 
     group_info info() const;
